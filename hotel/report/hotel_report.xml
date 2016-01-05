@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <openerp>
-	<data>
+    <data>
 
         <!--Report for hotel folio -->
-		<report id="hotel_folio_details"
-			string="Folio Total"
-			model="hotel.folio"
-			name="folio.total"
-			rml="hotel/report/total_folio.rml"
-			menu="False"
-			auto="False"/>
+        <report id="hotel_folio_details"
+            string="Folio Total"
+            model="hotel.folio"
+            name="folio.total"
+            rml="hotel/report/total_folio.rml"
+            menu="False"
+            auto="False"/>
 
-	</data>
+    </data>
 </openerp>

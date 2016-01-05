@@ -8,6 +8,7 @@
         <t t-foreach="docs" t-as="o">
             <t t-call="report.external_layout">
                 <div class="page">
+                    <br/><br/>
                     <div class="row">
                         <h2>
                             <span><center>Room Activities Report</center></span>

@@ -3,11 +3,11 @@
     <data>
 
         <!--Form view for hotel reservation wizard-->
-        <record model="ir.ui.view" id="hotel_reservation_wizard_form_view">
+        <record id="hotel_reservation_wizard_form_view" model="ir.ui.view">
             <field name="name">hotel.reservation.wizard.form</field>
             <field name="model">hotel.reservation.wizard</field>
             <field name="arch" type="xml">
-                <form string="Reservation List" version='7.0'>
+                <form string="Reservation List">
                     <group col="4">
                         <field name="date_start"/>
                         <field name="date_end"/>
@@ -24,8 +24,7 @@
         </record>
 
         <!--Action for hotel reservation wizard-->
-        <record id="action_hotel_reservation_wizard"
-            model="ir.actions.act_window">
+        <record id="action_hotel_reservation_wizard" model="ir.actions.act_window">
             <field name="name">Hotel Reservation Report</field>
             <field name="res_model">hotel.reservation.wizard</field>
             <field name="view_type">form</field>
@@ -38,7 +37,7 @@
             <field name="name">make.folio.wizard.form</field>
             <field name="model">wizard.make.folio</field>
             <field name="arch" type="xml">
-                <form string="Create Folio" version='8.0'>
+                <form string="Create Folio">
                     <separator colspan="4" string="Do you really want to create the Folio ?" />
                   <!--  <field name="grouped" /> -->
                     <newline/>
@@ -51,19 +50,20 @@
             </field>
         </record>
 
-        <act_window name="Make Folios"
+        <act_window 
+            id="act_make_folio"
+            name="Make Folios"
             key2="client_action_multi"
             res_model="wizard.make.folio"
             src_model="hotel.reservation"
-            id="act_make_folio"
             view_mode="form" target="new"
             view_type="form"/>
 
         <menuitem
+            id="wizard_res_menu"
             name="Hotel Reservation Report" 
             action="action_hotel_reservation_wizard"
             parent="hotel.hotel_report_menu"
-            id="wizard_res_menu"
             sequence="28"/>
 
     </data>

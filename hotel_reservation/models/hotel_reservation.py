@@ -1,24 +1,6 @@
-# -*- coding: UTF-8 -*-
-# --------------------------------------------------------------------------
-#
-#    OpenERP, Open Source Management Solution
-#    Copyright (C) 2012-Today Serpent Consulting Services PVT. LTD.
-#    (<http://www.serpentcs.com>)
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>
-#
-# ---------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp.exceptions import except_orm, ValidationError
 from dateutil.relativedelta import relativedelta
@@ -43,13 +25,13 @@ class hotel_folio(models.Model):
         @param vals: dictionary of fields value.
         """
         folio_write = super(hotel_folio, self).write(vals)
-        reservation_line_obj = self.env['hotel.room.reservation.line']
         for folio_obj in self:
             if folio_obj.reservation_id:
                 for reservation in folio_obj.reservation_id:
-                    reservation_obj = (reservation_line_obj.search
-                                       ([('reservation_id', '=',
-                                          reservation.id)]))
+                    reservation_obj = (self.env['hotel.room.reservation.line'
+                                                ].search([('reservation_id',
+                                                            '=',
+                                                            reservation.id)]))
                     if len(reservation_obj) == 1:
                         for line_id in reservation.reservation_line:
                             line_id = line_id.reserve
@@ -193,10 +175,9 @@ class hotel_reservation(models.Model):
             if self.checkout < self.checkin:
                 raise except_orm(_('Warning'), _('Checkout date \
                 should be greater than Checkin date.'))
-        delta = datetime.timedelta(days=1)
         dat_a = time.strptime(checkout_date,
                               DEFAULT_SERVER_DATETIME_FORMAT)[:5]
-        addDays = datetime.datetime(*dat_a) + delta
+        addDays = datetime.datetime(*dat_a) + datetime.timedelta(days=1)
         self.dummy = addDays.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
     @api.onchange('partner_id')
@@ -268,6 +249,27 @@ class hotel_reservation(models.Model):
                             }
                         room_id.write({'isroom': False, 'status': 'occupied'})
                         reservation_line_obj.create(vals)
+        return True
+
+    @api.multi
+    def cancel_reservation(self):
+        """
+        This method cancel recordset for hotel room reservation line
+        ------------------------------------------------------------------
+        @param self: The object pointer
+        @return: cancel record set for hotel room reservation line.
+        """
+        self.write({'state': 'cancel'})
+        room_reservation_line = self.env['hotel.room.reservation.line'
+                                         ].search([('reservation_id',
+                                                    'in',
+                                                    self.ids)])
+        room_reservation_line.write({'state': 'unassigned'})
+        reservation_lines = self.env['hotel_reservation.line'
+                                     ].search([('line_id', 'in', self.ids)])
+        for reservation_line in reservation_lines:
+            reservation_line.reserve.write({'isroom': True,
+                                            'status': 'available'})
         return True
 
     @api.multi
@@ -351,6 +353,7 @@ class hotel_reservation(models.Model):
         """
         hotel_folio_obj = self.env['hotel.folio']
         room_obj = self.env['hotel.room']
+        vals = {}
         for reservation in self:
             folio_lines = []
             checkin_date = reservation['checkin']
@@ -401,6 +404,14 @@ class hotel_reservation(models.Model):
                              '(order_id, invoice_id) values (%s,%s)',
                              (reservation.id, folio.id)
                              )
+            for line in reservation.reservation_line:
+                for r in line.reserve:
+                    vals = {'room_id': r.id,
+                        'check_in': checkin_date,
+                        'check_out': checkout_date,
+                        'folio_id':folio.id,
+                        }
+                    self.env['folio.room.line'].create(vals)
             reservation.write({'state': 'done'})
         return True
 
@@ -418,9 +429,8 @@ class hotel_reservation(models.Model):
         @return: Duration and checkout_date
         '''
         value = {}
-        company_obj = self.env['res.company']
         configured_addition_hours = 0
-        company_ids = company_obj.search([])
+        company_ids = self.env['res.company'].search([])
         if company_ids.ids:
             configured_addition_hours = company_ids[0].additional_hours
         duration = 0
@@ -429,10 +439,10 @@ class hotel_reservation(models.Model):
                         (checkin_date, DEFAULT_SERVER_DATETIME_FORMAT))
             chkout_dt = (datetime.datetime.strptime
                          (checkout_date, DEFAULT_SERVER_DATETIME_FORMAT))
-            dur = chkout_dt - chkin_dt
-            duration = dur.days + 1
+            duration_day = chkout_dt - chkin_dt
+            duration = duration_day.days + 1
             if configured_addition_hours > 0:
-                additional_hours = abs((dur.seconds / 60) / 60)
+                additional_hours = abs((duration_day.seconds / 60) / 60)
                 if additional_hours >= configured_addition_hours:
                     duration += 1
         value.update({'duration': duration})
@@ -449,9 +459,9 @@ class hotel_reservation(models.Model):
             vals = {}
         if self._context is None:
             self._context = {}
-        seq_obj = self.env['ir.sequence']
-        hotel_reserve = seq_obj.next_by_code('hotel.reservation') or 'New'
-        vals['reservation_no'] = hotel_reserve
+        vals['reservation_no'] = self.env['ir.sequence'
+                                          ].next_by_code('hotel.reservation'
+                                                         ) or 'New'
         return super(hotel_reservation, self).create(vals)
 
 
@@ -479,8 +489,7 @@ class hotel_reservation_line(models.Model):
         -----------------------------------------------------------
         @param self: object pointer
         '''
-        hotel_room_obj = self.env['hotel.room']
-        hotel_room_ids = hotel_room_obj.search([('categ_id', '=',
+        hotel_room_ids = self.env['hotel.room'].search([('categ_id', '=',
                                                  self.categ_id.id),
                                                 ('isroom', '=', True)])
         assigned = False
@@ -510,12 +519,11 @@ class hotel_reservation_line(models.Model):
         @param self: The object pointer
         @return: True/False.
         """
-        hotel_room_reserv_line_obj = self.env['hotel.room.reservation.line']
         for reserv_rec in self:
             for rec in reserv_rec.reserve:
                 hres_arg = [('room_id', '=', rec.id),
                             ('reservation_id', '=', reserv_rec.line_id.id)]
-                myobj = hotel_room_reserv_line_obj.search(hres_arg)
+                myobj = self.env['hotel.room.reservation.line'].search(hres_arg)
                 if myobj.ids:
                     rec.write({'isroom': True, 'status': 'available'})
                     myobj.unlink()
@@ -559,8 +567,6 @@ class hotel_room(models.Model):
         @param self: The object pointer
         @return: update status of hotel room reservation line
         """
-        reservation_line_obj = self.env['hotel.room.reservation.line']
-        folio_room_line_obj = self.env['folio.room.line']
         now = datetime.datetime.now()
         curr_date = now.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
         for room in self.search([]):
@@ -570,12 +576,13 @@ class hotel_room(models.Model):
             reserv_args = [('id', 'in', reserv_line_ids),
                            ('check_in', '<=', curr_date),
                            ('check_out', '>=', curr_date)]
-            reservation_line_ids = reservation_line_obj.search(reserv_args)
+            reservation_line_ids = self.env['hotel.room.reservation.line'
+                                            ].search(reserv_args)
             rooms_ids = [room_line.ids for room_line in room.room_line_ids]
             rom_args = [('id', 'in', rooms_ids),
                         ('check_in', '<=', curr_date),
                         ('check_out', '>=', curr_date)]
-            room_line_ids = folio_room_line_obj.search(rom_args)
+            room_line_ids = self.env['folio.room.line'].search(rom_args)
             status = {'isroom': True, 'color': 5}
             if reservation_line_ids.ids:
                 status = {'isroom': False, 'color': 2}
@@ -630,12 +637,13 @@ class room_reservation_summary(models.Model):
         '''
         @param self: object pointer
         '''
-        mod_obj = self.env['ir.model.data']
         if self._context is None:
             self._context = {}
-        model_data_ids = mod_obj.search([('model', '=', 'ir.ui.view'),
-                                         ('name', '=',
-                                          'view_hotel_reservation_form')])
+        model_data_ids = self.env['ir.model.data'
+                                  ].search([('model', '=', 'ir.ui.view'),
+                                            ('name',
+                                             '=',
+                                             'view_hotel_reservation_form')])
         resource_id = model_data_ids.read(fields=['res_id'])[0]['res_id']
         return {'name': _('Reconcile Write-Off'),
                 'context': self._context,
@@ -697,7 +705,8 @@ class room_reservation_summary(models.Model):
                             reservline_ids = (reservation_line_obj.search
                                               ([('id', 'in', reservline_ids),
                                                 ('check_in', '<=', chk_date),
-                                                ('check_out', '>=', chk_date)
+                                                ('check_out', '>=', chk_date),
+                                                ('status','!=','cancel')
                                                 ]))
                             if reservline_ids:
                                 room_list_stats.append({'state': 'Reserved',
@@ -818,5 +827,3 @@ class quick_room_reservation(models.TransientModel):
                                       })]
                }))
         return True
-
-# # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

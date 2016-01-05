@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <openerp>
-	<data>
+    <data>
+
         <!--Form view for folio report wizard -->
         <record model="ir.ui.view" id="view_hotel_order_wizard">
             <field name="name">order.report.wizard</field>
@@ -36,5 +37,5 @@
         <menuitem name="Pos Order Report" action="hotel_order_wizard"
             id="wizard_order_menu" parent="hotel.hotel_report_menu" sequence="32"/>
 
-	</data>
+    </data>
 </openerp>

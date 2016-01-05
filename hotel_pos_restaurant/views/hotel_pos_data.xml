@@ -4,7 +4,6 @@
 
 
         <!--  Food Item Category -->
-        
         <record id="food" model="pos.category">
             <field name="name">Food</field>
             <field name="image" type="base64" file="hotel_pos_restaurant/static/img/food-image.jpg"/>
