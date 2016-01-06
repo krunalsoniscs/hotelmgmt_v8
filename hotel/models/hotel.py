@@ -92,7 +92,17 @@ class hotel_room_type(models.Model):
                              delegate=True, select=True, ondelete='cascade',
                              help='Hotel Room Parent category')
 
-
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.cat_id.unlink()
+        return super(hotel_room_type, self).unlink()
+    
 class product_product(models.Model):
 
     _inherit = "product.product"
@@ -113,6 +123,17 @@ class hotel_room_amenities_type(models.Model):
     cat_id = fields.Many2one('product.category', 'category', required=True,
                              delegate=True, ondelete='cascade',
                              help='Hotel room amenities parent category')
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.cat_id.unlink()
+        return super(hotel_room_amenities_type, self).unlink()
 
 
 class hotel_room_amenities(models.Model):
@@ -133,10 +154,12 @@ class folio_room_line(models.Model):
     _description = 'Hotel Room Reservation'
     _rec_name = 'room_id'
 
-    room_id = fields.Many2one(comodel_name='hotel.room', string='Room id')
+    room_id = fields.Many2one(comodel_name='hotel.room', string='Room id',
+                              ondelete='cascade')
     check_in = fields.Datetime('Check In Date', required=True)
     check_out = fields.Datetime('Check Out Date', required=True)
-    folio_id = fields.Many2one('hotel.folio', string='Folio Number')
+    folio_id = fields.Many2one('hotel.folio', string='Folio Number',
+                               ondelete='cascade')
     status = fields.Selection(string='state', related='folio_id.state')
 
 
@@ -516,6 +539,19 @@ class hotel_folio(models.Model):
                                          ([('folio_id', '=', folio_obj.id)]))
                     folio_romline_rec.write(room_vals)
         return folio_write
+
+
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            if records.state not in ['draft']:
+                raise Warning("You can delete only Draft Folio")
+        return super(hotel_folio, self).unlink()
 
     @api.onchange('warehouse_id')
     def onchange_warehouse_id(self):
@@ -1061,6 +1097,16 @@ class hotel_service_type(models.Model):
     ser_id = fields.Many2one('product.category', 'category', required=True,
                              delegate=True, select=True, ondelete='cascade')
 
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.ser_id.unlink()
+        return super(hotel_service_type, self).unlink()
 
 class hotel_services(models.Model):
 

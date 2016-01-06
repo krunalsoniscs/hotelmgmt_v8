@@ -53,7 +53,7 @@
             <field name="name">hotel.floor.tree</field>
             <field name="model">hotel.floor</field>
             <field name="arch" type="xml">
-                <tree string=" Hotel Floors">
+                <tree string=" Hotel Floors" editable="top">
                     <field name="name" colspan="1" />
                     <field name="sequence" select="1" />
                 </tree>
@@ -291,9 +291,9 @@
                                 <field name="name" select="1" />
                             </h1>
                             <label for="status" string="Status" />
-                            <h2>
+                            <h4>
                                 <field name="status" />
-                            </h2>
+                            </h4>
                             <h2>
                                 <field name="isroom" />
                             </h2>
@@ -344,7 +344,7 @@
                             </page>
                             <page string="Folio Room Reservations">
                                 <separator colspan='4' string="Folio Room Reservation Line" />
-                                <field name="room_line_ids" colspan="4" nolabel='1'>
+                                <field name="room_line_ids" colspan="4" nolabel='1' readonly="1">
                                     <form string=" Room line">
                                         <group colspan='4' col='4'>
                                             <field name="room_id" />
@@ -511,16 +511,14 @@
                     <header>
                         <button name="action_confirm" states="draft" string="Confirm Sale"
                             class="btn-primary" type="object" />
-                        <button name="action_invoice_create" states="sale" string="Create Invoice"
-                            type="object" class="oe_highlight" />
+                        <button name="action_invoice_create" string="Create Invoice"
+                            type="object" class="oe_highlight" attrs="{'invisible': [('invoice_status', '!=', 'to invoice')]}"/>
                         <button name="action_cancel_draft" states="cancel" string="Set to Draft"
                             type="object" icon="gtk-file" class="oe_highlight" />
-                        <button name="action_cancel" string="Cancel Folio" states="sale"
-                            type="object" icon="gtk-cancel" class="oe_highlight" />
-                        <button name="action_cancel" string="Cancel Folio" states="draft"
+                        <button name="action_cancel" string="Cancel Folio" states="draft,sent,sale"
                             icon="gtk-cancel" type="object" class="oe_highlight" />
                         <button name="action_done" type="object" string="Set to Done"
-                            states="sale" attrs="{'invisible': [('invoice_status', '=', 'invoiced')]}"
+                            states="sale" 
                             help="If a Hotel Folio is done, you cannot modify it manually anymore. However, you will still be able to invoice or deliver. This is used to freeze the Hotel Folio." />
                         <field name="state" select="2" widget="statusbar"
                             statusbar_visible="draft,sent,sale,done" />
@@ -555,7 +553,7 @@
                                 <group colspan="4" col="4">
                                     <field name="checkin_date" />
                                     <field name="checkout_date" />
-                                    <field name="duration" />
+                                    <field name="duration" attrs="{'readonly':[('state','not in',('draft'))]}"/>
                                 </group>
                                 <separator string="Room Lines" colspan="4" />
                                 <field name="room_lines" colspan="4" string="Room Line"
@@ -673,10 +671,10 @@
                             </page>
                             <page string="Other data">
                                 <group>
-                                    <field name="user_id" />
+                                    <field name="user_id" attrs="{'readonly':[('state','not in',('draft'))]}"/>
                                     <!-- <field name="order_policy" invisible="1"/> -->
                                     <field name="hotel_policy" attrs="{'readonly':[('state','not in',('draft'))]}" />
-                                    <field name="client_order_ref" />
+                                    <field name="client_order_ref" attrs="{'readonly':[('state','not in',('draft'))]}"/>
                                 </group>
                             </page>
                             <page string="History">

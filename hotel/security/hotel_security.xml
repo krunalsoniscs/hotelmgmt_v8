@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
 <data noupdate="1">
-
-    <!--Group for hotel manager -->
-    <record id="group_hotel_manager" model="res.groups">
-        <field name="name">Hotel Management/ Manager</field>
+    <record model="ir.module.category" id="hotel_management_module_category">
+        <field name="name">Hotel Management</field>
+        <field name="description">Allows you to change record for this Module</field>
+        <field name="sequence">1</field>
     </record>
-
+    
     <!--Group for hotel user -->
     <record id="group_hotel_user" model="res.groups">
-        <field name="name">Hotel Management / User</field>
+        <field name="name">User</field>
+        <field name="category_id" ref="hotel.hotel_management_module_category"/>
+        <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    
+    <!--Group for hotel manager -->
+    <record id="group_hotel_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="category_id" ref="hotel.hotel_management_module_category"/>
+        <field name="implied_ids" eval="[(4, ref('group_hotel_user'))]"/>
     </record>
 </data>
 </openerp>
