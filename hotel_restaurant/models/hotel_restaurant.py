@@ -78,7 +78,6 @@ class HotelRestaurantReservation(models.Model):
         @param self: The object pointer
         @return: new record set for hotel restaurant reservation.
         """
-        proxy = self.env['hotel.reservation.order']
         for record in self:
             table_ids = [tableno.id for tableno in record.tableno]
             values = {
@@ -88,7 +87,7 @@ class HotelRestaurantReservation(models.Model):
                 'table_no': [(6, 0, table_ids)],
                 'is_folio': record.is_folio,
             }
-            proxy.create(values)
+            self.env['hotel.reservation.order'].create(values)
         self.write({'state': 'order'})
         return True
 
@@ -198,27 +197,43 @@ class HotelRestaurantReservation(models.Model):
     _rec_name = "reservation_id"
 
     reservation_id = fields.Char('Reservation No', size=64, readonly=True)
-    room_no = fields.Many2one('product.product', string='Room No', size=64)
-    folio_id = fields.Many2one('hotel.folio', string='Folio No')
+    room_no = fields.Many2one('product.product', string='Room No', size=64,
+                              domain=[('isroom','=','True')],
+                              readonly=True,
+                              states={'draft': [('readonly', False)]})
+    folio_id = fields.Many2one('hotel.folio', string='Folio No',
+                               readonly=True,
+                               states={'draft': [('readonly', False)]})
     start_date = fields.Datetime('Start Time', required=True,
+                                 readonly=True,
+                                 states={'draft': [('readonly', False)]},
                                  default=(lambda *a:
                                           time.strftime
                                           (DEFAULT_SERVER_DATETIME_FORMAT)))
-    end_date = fields.Datetime('End Time', required=True)
+    end_date = fields.Datetime('End Time', required=True,
+                               readonly=True,
+                              states={'draft': [('readonly', False)]})
     cname = fields.Many2one('res.partner', string='Customer Name', size=64,
-                            required=True)
-    partner_address_id = fields.Many2one('res.partner', string='Address')
+                            required=True,readonly=True,
+                            states={'draft': [('readonly', False)]})
+    partner_address_id = fields.Many2one('res.partner', string='Address',
+                                         readonly=True,
+                                         states={'draft': [('readonly', False)
+                                                           ]})
     tableno = fields.Many2many('hotel.restaurant.tables',
                                relation='reservation_table',
                                column1='reservation_table_id',
                                column2='name', string='Table Number',
+                               readonly= False,
+                               states={'done': [('readonly', True)]},
                                help="Table reservation detail. ")
     state = fields.Selection([('draft', 'Draft'), ('confirm', 'Confirmed'),
                               ('done', 'Done'), ('cancel', 'Cancelled'),
                               ('order', 'Order Created')], 'state',
                              select=True, required=True, readonly=True,
                              default=lambda * a: 'draft')
-    is_folio = fields.Boolean('Is a Hotel Guest??')
+    is_folio = fields.Boolean('Is a Hotel Guest??',readonly=True,
+                              states={'draft': [('readonly', False)]})
 
     @api.model
     def create(self, vals):
@@ -340,8 +355,6 @@ class HotelRestaurantOrder(models.Model):
         @return: new record set for hotel restaurant order list.
         """
         res = []
-        order_tickets_obj = self.env['hotel.restaurant.kitchen.order.tickets']
-        restaurant_order_list_obj = self.env['hotel.restaurant.order.list']
         for order in self:
             if len(order.order_list.ids) == 0:
                 raise except_orm(_('No Order Given'),
@@ -350,7 +363,7 @@ class HotelRestaurantOrder(models.Model):
                 raise except_orm(_('No Table Assigned '),
                                  _('Please Assign a Table'))
             table_ids = [x.id for x in order.table_no]
-            kot_data = order_tickets_obj.create({
+            kot_data = self.env['hotel.restaurant.kitchen.order.tickets'].create({
                 'orderno': order.order_no,
                 'kot_date': order.o_date,
                 'room_no': order.room_no.name,
@@ -364,7 +377,7 @@ class HotelRestaurantOrder(models.Model):
                           'item_qty': order_line.item_qty,
                           'item_rate': order_line.item_rate
                           }
-                restaurant_order_list_obj.create(o_line)
+                self.env['hotel.restaurant.order.list'].create(o_line)
                 res.append(order_line.id)
             self.rest_item_id = [(6, 0, res)]
             self.write({'state': 'order'})
@@ -379,28 +392,47 @@ class HotelRestaurantOrder(models.Model):
     o_date = fields.Datetime('Order Date', required=True,
                              default=(lambda *a:
                                       time.strftime
-                                      (DEFAULT_SERVER_DATETIME_FORMAT)))
-    room_no = fields.Many2one('product.product', string='Room No', size=64)
-    folio_id = fields.Many2one('hotel.folio', string='Folio No')
-    waiter_name = fields.Many2one('res.partner', 'Waiter Name')
+                                      (DEFAULT_SERVER_DATETIME_FORMAT)),
+                             readonly=True,
+                             states={'draft': [('readonly', False)]})
+    room_no = fields.Many2one('product.product', string='Room No', size=64,
+                              readonly=True,
+                              states={'draft': [('readonly', False)]})
+    folio_id = fields.Many2one('hotel.folio', string='Folio No',
+                               readonly=True,
+                               states={'draft': [('readonly', False)]})
+    waiter_name = fields.Many2one('res.partner', 'Waiter Name',
+                                  readonly=True,
+                                  states={'draft': [('readonly', False)]})
     table_no = fields.Many2many('hotel.restaurant.tables', 'temp_table2',
-                                'table_no', 'name', 'Table Number')
+                                'table_no', 'name', 'Table Number',
+                                readonly= False,
+                                states={'done': [('readonly', True)]})
     order_list = fields.One2many('hotel.restaurant.order.list', 'o_list',
-                                 'Order List')
-    tax = fields.Float('Tax (%) ')
+                                 'Order List',readonly= False,
+                                 states={'done': [('readonly', True)]})
+    tax = fields.Float('Tax (%) ',readonly=True,
+                       states={'draft': [('readonly', False)]})
     amount_subtotal = fields.Float(compute='_sub_total', method=True,
+                                   readonly=True,
+                                   states={'draft': [('readonly', False)]},
                                    string='Subtotal')
-    amount_total = fields.Float(compute='_total', method=True,
+    amount_total = fields.Float(compute='_total', method=True,readonly=True,
+                                states={'draft': [('readonly', False)]},
                                 string='Total')
     state = fields.Selection([('draft', 'Draft'), ('order', 'Order Created'),
                               ('done', 'Done'), ('cancel', 'Cancelled')],
                              'State', select=True, required=True,
                              readonly=True, default=lambda * a: 'draft')
     is_folio = fields.Boolean('Is a Hotel Guest??', help='is customer reside'
-                              'in hotel or not')
+                              'in hotel or not',readonly=True,
+                              states={'draft': [('readonly', False)]})
     cname = fields.Many2one('res.partner', string='Customer Name', size=64,
+                            readonly=True,
+                            states={'draft': [('readonly', False)]},
                             required=True)
-    kitchen_id = fields.Integer('Kitchen id')
+    kitchen_id = fields.Integer('Kitchen id',readonly=True,
+                                states={'draft': [('readonly', False)]})
     rest_item_id = fields.Many2many('hotel.restaurant.order.list',
                                     'restau_kitc_ids', 'restau_id', 'kit_id',
                                     "Rest")
@@ -430,7 +462,6 @@ class HotelRestaurantOrder(models.Model):
         @return: update record set for hotel restaurant order list.
         """
         order_tickets_obj = self.env['hotel.restaurant.kitchen.order.tickets']
-        rest_order_list_obj = self.env['hotel.restaurant.order.list']
         for order in self:
             table_ids = [x.id for x in order.table_no]
             line_data = {
@@ -453,7 +484,7 @@ class HotelRestaurantOrder(models.Model):
                         'item_rate': order_line.item_rate
                     }
                     self.rest_item_id = [(4, order_line.id)]
-                    rest_order_list_obj.create(o_line)
+                    self.env['hotel.restaurant.order.list'].create(o_line)
         return True
 
     @api.multi
@@ -464,24 +495,22 @@ class HotelRestaurantOrder(models.Model):
         ----------------------------------------
         @param self: object pointer
         """
-        hotel_folio_obj = self.env['hotel.folio']
-        hsl_obj = self.env['hotel.service.line']
-        so_line_obj = self.env['sale.order.line']
         for order_obj in self:
                 hotelfolio = order_obj.folio_id.order_id.id
                 if order_obj.folio_id:
-                    for order1 in order_obj.order_list:
+                    for order_first in order_obj.order_list:
                         values = {'order_id': hotelfolio,
-                                  'name': order1.name.name,
-                                  'product_id': order1.name.product_id.id,
-                                  'product_uom_qty': order1.item_qty,
-                                  'price_unit': order1.item_rate,
-                                  'price_subtotal': order1.price_subtotal,
+                                  'name': order_first.name.name,
+                                  'product_id': order_first.name.product_id.id,
+                                  'product_uom_qty': order_first.item_qty,
+                                  'product_uom': order_first.name.product_id.uom_id.id,
+                                  'price_unit': order_first.item_rate,
+                                  'price_subtotal': order_first.price_subtotal,
                                   }
-                        sol_rec = so_line_obj.create(values)
-                        hsl_obj.create({'folio_id': order_obj.folio_id.id,
+                        sol_rec = self.env['sale.order.line'].create(values)
+                        self.env['hotel.service.line'].create({'folio_id': order_obj.folio_id.id,
                                         'service_line_id': sol_rec.id})
-                        hf_rec = hotel_folio_obj.browse(order_obj.folio_id.id)
+                        hf_rec = self.env['hotel.folio'].browse(order_obj.folio_id.id)
                         hf_rec.write({'hotel_restaurant_order_ids':
                                       [(4, order_obj.id)]})
                 self.write({'state': 'done'})
@@ -523,8 +552,6 @@ class HotelReservationOrder(models.Model):
         @return: new record set for hotel restaurant order list.
         """
         res = []
-        order_tickets_obj = self.env['hotel.restaurant.kitchen.order.tickets']
-        rest_order_list_obj = self.env['hotel.restaurant.order.list']
         for order in self:
             if len(order.order_list) == 0:
                 raise except_orm(_('No Order Given'),
@@ -537,7 +564,8 @@ class HotelReservationOrder(models.Model):
                 'w_name': order.waitername.name,
                 'tableno': [(6, 0, table_ids)],
                 }
-            kot_data = order_tickets_obj.create(line_data)
+            kot_data = self.env['hotel.restaurant.kitchen.order.tickets'
+                                ].create(line_data)
             self.kitchen_id = kot_data.id
             for order_line in order.order_list:
                 o_line = {
@@ -546,7 +574,7 @@ class HotelReservationOrder(models.Model):
                     'item_qty': order_line.item_qty,
                     'item_rate': order_line.item_rate
                 }
-                rest_order_list_obj.create(o_line)
+                self.env['hotel.restaurant.order.list'].create(o_line)
                 res.append(order_line.id)
             self.rest_id = [(6, 0, res)]
             self.write({'state': 'order'})
@@ -561,7 +589,6 @@ class HotelReservationOrder(models.Model):
         @return: update record set for hotel restaurant order list.
         """
         order_tickets_obj = self.env['hotel.restaurant.kitchen.order.tickets']
-        rest_order_list_obj = self.env['hotel.restaurant.order.list']
         for order in self:
             table_ids = [x.id for x in order.table_no]
             line_data = {
@@ -584,7 +611,7 @@ class HotelReservationOrder(models.Model):
                         'item_rate': order_line.item_rate
                     }
                     self.rest_id = [(4, order_line.id)]
-                    rest_order_list_obj.create(o_line)
+                    self.env['hotel.restaurant.order.list'].create(o_line)
         return True
 
     @api.multi
@@ -595,24 +622,22 @@ class HotelReservationOrder(models.Model):
         ----------------------------------------
         @param self: object pointer
         """
-        hotel_folio_obj = self.env['hotel.folio']
-        hsl_obj = self.env['hotel.service.line']
-        so_line_obj = self.env['sale.order.line']
         for order_obj in self:
                 hotelfolio = order_obj.folio_id.order_id.id
                 if order_obj.folio_id:
-                    for order1 in order_obj.order_list:
+                    for order_first in order_obj.order_list:
                         values = {'order_id': hotelfolio,
-                                  'name': order1.name.name,
-                                  'product_id': order1.name.product_id.id,
-                                  'product_uom_qty': order1.item_qty,
-                                  'price_unit': order1.item_rate,
-                                  'price_subtotal': order1.price_subtotal,
+                                  'name': order_first.name.name,
+                                  'product_id': order_first.name.product_id.id,
+                                  'product_uom_qty': order_first.item_qty,
+                                  'price_unit': order_first.item_rate,
+                                  'price_subtotal': order_first.price_subtotal,
+                                  'product_uom': order_first.name.product_id.uom_id.id,
                                   }
-                        sol_rec = so_line_obj.create(values)
-                        hsl_obj.create({'folio_id': order_obj.folio_id.id,
+                        sol_rec = self.env['sale.order.line'].create(values)
+                        self.env['hotel.service.line'].create({'folio_id': order_obj.folio_id.id,
                                         'service_line_id': sol_rec.id})
-                        hf_rec = hotel_folio_obj.browse(order_obj.folio_id.id)
+                        hf_rec = self.env['hotel.folio'].browse(order_obj.folio_id.id)
                         hf_rec.write({'hotel_reservation_order_ids':
                                       [(4, order_obj.id)]})
                 if order_obj.reservationno:
@@ -627,16 +652,26 @@ class HotelReservationOrder(models.Model):
 
     order_number = fields.Char('Order No', size=64, readonly=True)
     reservationno = fields.Many2one('hotel.restaurant.reservation',
-                                    'Reservation No')
+                                    'Reservation No',
+                                    readonly=True,
+                                    states={'draft': [('readonly', False)]})
     date1 = fields.Datetime('Date', required=True,
                             default=(lambda *a:
                                      time.strftime
-                                     (DEFAULT_SERVER_DATETIME_FORMAT)))
-    waitername = fields.Many2one('res.partner', 'Waiter Name')
+                                     (DEFAULT_SERVER_DATETIME_FORMAT)),
+                            readonly=True,
+                            states={'draft': [('readonly', False)]})
+    waitername = fields.Many2one('res.partner', 'Waiter Name',
+                                 readonly=True,
+                                 states={'draft': [('readonly', False)]})
     table_no = fields.Many2many('hotel.restaurant.tables', 'temp_table4',
-                                'table_no', 'name', 'Table Number')
+                                'table_no', 'name', 'Table Number',
+                                readonly= False,
+                                states={'done': [('readonly', True)]})
     order_list = fields.One2many('hotel.restaurant.order.list', 'o_l',
-                                 'Order List')
+                                 'Order List',
+                                 readonly= False,
+                                 states={'done': [('readonly', True)]})
     tax = fields.Float('Tax (%) ', size=64)
     amount_subtotal = fields.Float(compute='_sub_total', method=True,
                                    string='Subtotal')
@@ -648,7 +683,9 @@ class HotelReservationOrder(models.Model):
                               ('done', 'Done')], 'State', select=True,
                              required=True, readonly=True,
                              default=lambda * a: 'draft')
-    folio_id = fields.Many2one('hotel.folio', string='Folio No')
+    folio_id = fields.Many2one('hotel.folio', string='Folio No',
+                               readonly=True,
+                               states={'draft': [('readonly', False)]})
     is_folio = fields.Boolean('Is a Hotel Guest??', help='is customer reside'
                               'in hotel or not')
 

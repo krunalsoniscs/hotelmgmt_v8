@@ -4,7 +4,7 @@
         <report 
             id="report_hotel_res_order_kot"
             string="Kitchen Order Tickets"
-            model="hotel.restaurant.order" 
+            model="hotel.restaurant.order"
             report_type="qweb-pdf"
             file="hotel_restaurant.report_hotel_order_kot"
             name="hotel_restaurant.report_hotel_order_kot"
@@ -13,7 +13,7 @@
         <report 
             id="report_hotel_res_order_bill"
             string="Customer Bill"
-            model="hotel.restaurant.order" 
+            model="hotel.restaurant.order"
             report_type="qweb-pdf"
             file="hotel_restaurant.report_order_bill"
             name="hotel_restaurant.report_order_bill"
@@ -23,7 +23,7 @@
         <report
             id="report_hotel_reservation_order_bill"
             string="Customer Bill"
-            model="hotel.reservation.order" 
+            model="hotel.reservation.order"
             report_type="qweb-pdf"
             file="hotel_restaurant.report_res_order_bill"
             name="hotel_restaurant.report_res_order_bill"
@@ -33,7 +33,7 @@
         <report 
             id="report_hotel_table_res"
             string="Table Reservation List"
-            model="hotel.restaurant.reservation" 
+            model="hotel.restaurant.reservation"
             report_type="qweb-pdf"
             file="hotel_restaurant.report_res_table"
             name="hotel_restaurant.report_res_table"
