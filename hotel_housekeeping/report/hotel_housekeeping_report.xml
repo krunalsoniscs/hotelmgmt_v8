@@ -6,7 +6,7 @@
         <report 
             id="report_housekeeping_activity_detail"
             string="Activity Detail"
-            model="hotel.housekeeping" 
+            model="hotel.housekeeping"
             report_type="qweb-pdf"
             file="hotel_housekeeping.report_housekeeping"
             name="hotel_housekeeping.report_housekeeping"

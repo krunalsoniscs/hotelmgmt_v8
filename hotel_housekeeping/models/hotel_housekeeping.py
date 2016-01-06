@@ -11,8 +11,7 @@ class product_category(models.Model):
 
     _inherit = "product.category"
 
-    isactivitytype = fields.Boolean('Is Activity Type',
-                                    default=lambda *a: True)
+    isactivitytype = fields.Boolean('Is Activity Type')
 
 
 class hotel_housekeeping_activity_type(models.Model):
@@ -39,24 +38,36 @@ class hotel_housekeeping(models.Model):
     _name = "hotel.housekeeping"
     _description = "Reservation"
 
-    current_date = fields.Date("Today's Date", required=True,
+    current_date = fields.Date("Today's Date", required=True, readonly=True,
+                               states={'dirty': [('readonly', False)]},
                                default=(lambda *a:
                                         time.strftime
                                         (DEFAULT_SERVER_DATE_FORMAT)))
     clean_type = fields.Selection([('daily', 'Daily'),
                                    ('checkin', 'Check-In'),
                                    ('checkout', 'Check-Out')],
-                                  'Clean Type', required=True)
-    room_no = fields.Many2one('hotel.room', 'Room No', required=True)
+                                  'Clean Type', required=True,readonly=True,
+                                  states={'dirty': [('readonly', False)]})
+    room_no = fields.Many2one('hotel.room', 'Room No',
+                              required=True, readonly=True,
+                              states={'dirty': [('readonly', False)]})
     activity_lines = fields.One2many('hotel.housekeeping.activities',
-                                     'a_list', 'Activities',
+                                     'a_list', 'Activities',readonly=False,
+                                     states={'done': [('readonly', True)]},
                                      help='Detail of housekeeping activities')
-    inspector = fields.Many2one('res.users', 'Inspector', required=True)
-    inspect_date_time = fields.Datetime('Inspect Date Time', required=True)
+    inspector = fields.Many2one('res.users', 'Inspector',
+                                required=True, readonly=True,
+                                states={'dirty': [('readonly', False)]})
+    inspect_date_time = fields.Datetime('Inspect Date Time', required=True,
+                                        readonly=True,
+                                        states={'dirty': [('readonly', False)
+                                                          ]})
     quality = fields.Selection([('bad', 'Bad'), ('good', 'Good'),
-                                ('ok', 'Ok')], 'Quality', required=True,
+                                ('ok', 'Ok')], 'Quality',
+                               required=True, readonly=False,
+                               states={'done': [('readonly', True)]},
                                help="Inspector inspect the room and mark \
-as Bad, Good or Ok. ")
+                               as Bad, Good or Ok. ")
     state = fields.Selection([('dirty', 'Dirty'), ('clean', 'Clean'),
                               ('inspect', 'Inspect'), ('done', 'Done'),
                               ('cancel', 'Cancelled')], 'State', select=True,
@@ -128,7 +139,6 @@ class hotel_housekeeping_activities(models.Model):
     _description = "Housekeeping Activities "
 
     a_list = fields.Many2one('hotel.housekeeping', string='Reservation')
-#    room_id = fields.Many2one('hotel.room', string='Room No')
     today_date = fields.Date('Today Date')
     activity_name = fields.Many2one('hotel.activity',
                                     string='Housekeeping Activity')

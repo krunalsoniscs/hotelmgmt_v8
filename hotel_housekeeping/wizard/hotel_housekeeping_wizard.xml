@@ -3,7 +3,7 @@
     <data>
 
         <!--Form view for hotel housekeeping wizard -->
-        <record model="ir.ui.view" id="hotel_housekeeping_wizard_form_view">
+        <record id="hotel_housekeeping_wizard_form_view" model="ir.ui.view" >
             <field name="name">hotel.housekeeping.wizard.form</field>
             <field name="model">hotel.housekeeping.wizard</field>
             <field name="arch" type="xml">
@@ -32,8 +32,12 @@
             <field name="view_mode">form</field>
             <field name="target">new</field>
         </record>
-        <menuitem name="Activity Report" id="wizard_activity_menu"
-            action="action_hotel_housekeeping_wizard" parent="hotel.hotel_report_menu"
+
+        <menuitem
+            id="wizard_activity_menu"
+            name="Activity Report"
+            action="action_hotel_housekeeping_wizard"
+            parent="hotel.hotel_report_menu"
             sequence="29" />
 
         </data>
