@@ -107,7 +107,7 @@ class hotel_housekeeping(models.Model):
         self.write({'state': 'dirty'})
         wf_service = netsvc.LocalService('workflow')
         for id in self.ids:
-            wf_service.trg_create(self._uid, self._name, self.id, self._cr)
+            wf_service.trg_create(self._uid, self._name, id, self._cr)
         return True
 
     @api.multi
@@ -160,7 +160,7 @@ class hotel_housekeeping_activities(models.Model):
     _name = "hotel.housekeeping.activities"
     _description = "Housekeeping Activities "
 
-    a_list = fields.Many2one('hotel.housekeeping', string='Reservation')
+    a_list = fields.Many2one('hotel.housekeeping', string='Reservation', ondelete='cascade')
     today_date = fields.Date('Today Date')
     activity_name = fields.Many2one('hotel.activity',
                                     string='Housekeeping Activity')
@@ -198,9 +198,8 @@ class hotel_housekeeping_activities(models.Model):
         """
         if self._context is None:
             self._context = {}
+        print self._context
         res = super(hotel_housekeeping_activities, self).default_get(fields)
-        if self._context.get('room_id', False):
-            res.update({'room_id': self._context['room_id']})
         if self._context.get('today_date', False):
             res.update({'today_date': self._context['today_date']})
         return res

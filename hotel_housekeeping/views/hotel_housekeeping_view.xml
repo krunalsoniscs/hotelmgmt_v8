@@ -36,7 +36,7 @@
                         <newline />
                         <newline />
                         <separator string="Activity Lines" colspan="4" />
-                        <field name="activity_lines" context="{'room_id':room_no, 'today_date':current_date}"
+                        <field name="activity_lines" context="{'today_date':current_date}"
                         colspan="4" nolabel="1">
                             <form string="Activity Lines">
                                 <group colspan="4" col="4">
