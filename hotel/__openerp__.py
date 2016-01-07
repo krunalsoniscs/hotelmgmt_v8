@@ -8,7 +8,9 @@
     'category': 'Generic Modules/Hotel Management',
     'website': 'http://www.serpentcs.com',
     'depends': ['product_uos', 'sale_stock', 'point_of_sale', 'report'],
-    'demo': ['views/hotel_data.xml'],
+    'demo': [
+            'data/hotel_data.xml',
+     ],
     'data': [
             'security/hotel_security.xml',
             'security/ir.model.access.csv',

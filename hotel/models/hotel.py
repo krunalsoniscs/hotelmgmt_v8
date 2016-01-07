@@ -358,14 +358,17 @@ class hotel_folio(models.Model):
         -------------------------------------------------------------------
         @param self: object pointer
         '''
-        cr, uid, context = self.env.args
-        context = dict(context)
+        if not self._context:
+            self._context = {}
+        context = dict(self._context)
         for rec in self:
             if rec.partner_id.id and len(rec.room_lines) != 0:
-                context.update({'folioid': rec.id, 'guest': rec.partner_id.id,
-                                'room_no': rec.room_lines[0].product_id.name,
-                                'hotel': rec.warehouse_id.id})
-                self.env.args = cr, uid, misc.frozendict(context)
+                context.update({
+                                'default_folio_no': rec.id, 
+                                'default_guest_name': rec.partner_id.id,
+                                'default_room_number': rec.room_lines[0].product_id.name,
+                                'default_hotel_id': rec.warehouse_id.id
+                                })
             else:
                 raise except_orm(_('Warning'), _('Please Reserve Any Room.'))
         return {'name': _('Currency Exchange'),
@@ -374,11 +377,7 @@ class hotel_folio(models.Model):
                 'view_id': False,
                 'view_mode': 'form,tree',
                 'view_type': 'form',
-                'context': {'default_folio_no': context.get('folioid'),
-                            'default_hotel_id': context.get('hotel'),
-                            'default_guest_name': context.get('guest'),
-                            'default_room_number': context.get('room_no')
-                            },
+                'context': context,
                 }
 
     @api.constrains('room_lines')
@@ -423,24 +422,20 @@ class hotel_folio(models.Model):
         @param self: object pointer
         @return: Duration and checkout_date
         '''
-        company_obj = self.env['res.company']
         configured_addition_hours = 0
-        company_ids = company_obj.search([])
-        if company_ids.ids:
+        company_ids = self.env['res.company'].search([])
+        if company_ids:
             configured_addition_hours = company_ids[0].additional_hours
         myduration = 0
-        chckin = self.checkin_date
-        chckout = self.checkout_date
-        if chckin and chckout:
+        if self.checkin_date and self.checkout_date:
             server_dt = DEFAULT_SERVER_DATETIME_FORMAT
-            chkin_dt = datetime.datetime.strptime(chckin, server_dt)
-            chkout_dt = datetime.datetime.strptime(chckout, server_dt)
+            chkin_dt = datetime.datetime.strptime(self.checkin_date, server_dt)
+            chkout_dt = datetime.datetime.strptime(self.checkout_date, server_dt)
             dur = chkout_dt - chkin_dt
             sec_dur = dur.seconds
-            if (not dur.days and not sec_dur) or (dur.days and not sec_dur):
+            myduration = dur.days + 1
+            if not sec_dur:
                 myduration = dur.days
-            else:
-                myduration = dur.days + 1
             if configured_addition_hours > 0:
                 additional_hours = abs((dur.seconds / 60) / 60)
                 if additional_hours >= configured_addition_hours:
@@ -514,7 +509,7 @@ class hotel_folio(models.Model):
             for folio_rec in folio_obj.room_lines:
                 room_lst.append(folio_rec.product_id.id)
             new_rooms = set(room_lst).difference(set(room_list_first))
-            if len(list(new_rooms)) != 0:
+            if new_rooms:
                 room_list = self.env['product.product'].browse(list(new_rooms))
                 for rm in room_list:
                     room_obj = self.env['hotel.room'].search([('name', '=', rm.name)])
@@ -525,7 +520,7 @@ class hotel_folio(models.Model):
                             'folio_id': folio_obj.id,
                             }
                     self.env['folio.room.line'].create(vals)
-            if len(list(new_rooms)) == 0:
+            else:
                 room_list_obj = self.env['product.product'].browse(room_list_first)
                 for rom in room_list_obj:
                     room_obj = self.env['hotel.room'].search([('name', '=', rom.name)])
@@ -606,8 +601,10 @@ class hotel_folio(models.Model):
         '''
         @param self: object pointer
         '''
-        cr, uid, context = self.env.args
+        context = self._context
         context = dict(context)
+        if not context:
+            context = {}
         context.update({'depends': {}})
         self.env.args = cr, uid, frozendict(context)
         context.update({'active_model':'sale.order',
@@ -637,17 +634,15 @@ class hotel_folio(models.Model):
                 line.write({'invoiced': 'invoiced'})
         sale.write({'state': 'invoice_except'})
         return res
-
     @api.multi
     def action_cancel(self):
         '''
         @param self: object pointer
         '''
-        order_ids = [folio.order_id.id for folio in self]
-        sale_obj = self.env['sale.order'].browse(order_ids)
-        returnvalue = sale_obj.action_cancel()
         wf_service = netsvc.LocalService("workflow")
+        returnvalue = False
         for sale in self:
+            returnvalue = sale.order_id.action_cancel()
             for pick in sale.picking_ids:
                 wf_service.trg_validate(self._uid, 'stock.picking', pick.id,
                                         'button_cancel', self._cr)
@@ -660,32 +655,17 @@ class hotel_folio(models.Model):
 
     @api.multi
     def action_confirm(self):
-        for order in self.order_id:
-            order.state = 'sale'
-            order.order_line._action_procurement_create()
-            if not order.project_id:
-                for line in order.order_line:
+        for order in self:
+            order.order_id.state = 'sale'
+            order.order_id.order_line._action_procurement_create()
+            if not order.order_id.project_id:
+                for line in order.order_id.order_line:
                     if line.product_id.invoice_policy == 'cost':
-                        order._create_analytic_account()
+                        order.order_id._create_analytic_account()
                         break
         if self.env['ir.values'].get_default('sale.config.settings',
                                              'auto_done_setting'):
             self.order_id.action_done()
-
-    @api.multi
-    def test_state(self, mode):
-        '''
-        @param self: object pointer
-        @param mode: state of workflow
-        '''
-        write_done_ids = []
-        write_cancel_ids = []
-        if write_done_ids:
-            test_obj = self.env['sale.order.line'].browse(write_done_ids)
-            test_obj.write({'state': 'done'})
-        if write_cancel_ids:
-            test_obj = self.env['sale.order.line'].browse(write_cancel_ids)
-            test_obj.write({'state': 'cancel'})
 
     @api.multi
     def action_ship_create(self):
