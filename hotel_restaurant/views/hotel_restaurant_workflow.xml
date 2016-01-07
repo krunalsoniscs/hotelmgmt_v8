@@ -3,63 +3,63 @@
     <data>
 
         <!-- Workflow definition -->
-        <record model="workflow" id="wkf_table_resrvation">
+        <record id="wkf_table_resrvation" model="workflow">
             <field name="name">wkf.table.reservation</field>
             <field name="osv">hotel.restaurant.reservation</field>
             <field name="on_create">True</field>
         </record>
-        <record model="workflow.activity" id="act_draft">
+        <record id="act_draft" model="workflow.activity">
             <field name="wkf_id" ref="wkf_table_resrvation" />
             <field name="flow_start">True</field>
             <field name="name">draft</field>
         </record>
-        <record model="workflow.activity" id="act_confirm">
+        <record id="act_confirm" model="workflow.activity">
             <field name="wkf_id" ref="wkf_table_resrvation" />
             <field name="name">confirm</field>
             <field name="kind">function</field>
             <field name="action">table_reserved()</field>
             <field name="split_mode">OR</field>
         </record>
-        <record model="workflow.activity" id="act_cancel">
+        <record id="act_cancel" model="workflow.activity">
             <field name="wkf_id" ref="wkf_table_resrvation" />
             <field name="name">cancel</field>
             <field name="kind">function</field>
             <field name="action">table_cancel()</field>
         </record>
-        <record model="workflow.activity" id="act_done">
+        <record id="act_done" model="workflow.activity">
             <field name="wkf_id" ref="wkf_table_resrvation" />
             <field name="name">done</field>
             <field name="flow_stop">True</field>
             <field name="kind">stopall</field>
             <field name="action">table_done()</field>
         </record>
-        <record model="workflow.activity" id="act_create_order">
+        <record id="act_create_order" model="workflow.activity">
             <field name="wkf_id" ref="wkf_table_resrvation" />
             <field name="name">create_order</field>
             <field name="kind">function</field>
         </record>
         <!--  Transition  -->
-        <record model="workflow.transition" id="t1">
+        <record id="transition_confirm" model="workflow.transition">
             <field name="act_from" ref="act_draft" />
             <field name="act_to" ref="act_confirm" />
             <field name="signal">confirm</field>
         </record>
-        <record model="workflow.transition" id="t2">
+        <record id="transition_done" model="workflow.transition">
             <field name="act_from" ref="act_confirm" />
             <field name="act_to" ref="act_done" />
             <field name="signal">done</field>
         </record>
-        <record model="workflow.transition" id="t3">
+        <record id="transition_cancel" model="workflow.transition">
             <field name="act_from" ref="act_confirm" />
             <field name="act_to" ref="act_cancel" />
             <field name="signal">cancel</field>
         </record>
-        <record model="workflow.transition" id="t7">
+        <record id="transition_settodraft" model="workflow.transition">
             <field name="act_from" ref="act_cancel" />
             <field name="act_to" ref="act_draft" />
             <field name="signal">settodraft</field>
         </record>
-        <record model="workflow.transition" id="t8">
+        <record id="transition_create_order" model="workflow.transition">
             <field name="act_from" ref="act_done" />
             <field name="act_to" ref="act_create_order" />
             <field name="signal">create_order</field>
