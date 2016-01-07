@@ -112,13 +112,14 @@ class HotelRestaurantReservation(models.Model):
         ---------------------------------------------------------
         @param self: object pointer
         '''
+        room_ids = []
         for rec in self:
-            self.cname = False
-            self.room_no = False
             if rec.folio_id:
                 self.cname = rec.folio_id.partner_id.id
-                if rec.folio_id.room_lines:
-                    self.room_no = rec.folio_id.room_lines[0].product_id.id
+                room_ids = [room_line.product_id.id 
+                    for room_line in rec.folio_id.room_lines]
+                self.room_no = room_ids and room_ids[0] or False
+        return {'domain' : {'room_no' :[('id', 'in', room_ids)]}}
 
     @api.multi
     def action_set_to_draft(self):
@@ -198,7 +199,6 @@ class HotelRestaurantReservation(models.Model):
 
     reservation_id = fields.Char('Reservation No', size=64, readonly=True)
     room_no = fields.Many2one('product.product', string='Room No', size=64,
-                              domain=[('isroom','=','True')],
                               readonly=True,
                               states={'draft': [('readonly', False)]})
     folio_id = fields.Many2one('hotel.folio', string='Folio No',
@@ -317,13 +317,14 @@ class HotelRestaurantOrder(models.Model):
         ---------------------------------------------------------
         @param self: object pointer
         '''
+        room_ids = []
         for rec in self:
-            self.cname = False
-            self.room_no = False
             if rec.folio_id:
                 self.cname = rec.folio_id.partner_id.id
-                if rec.folio_id.room_lines:
-                    self.room_no = rec.folio_id.room_lines[0].product_id.id
+                room_ids = [room_line.product_id.id 
+                    for room_line in rec.folio_id.room_lines]
+                self.room_no = room_ids and room_ids[0] or False
+        return {'domain' : {'room_no' :[('id', 'in', room_ids)]}}
 
     @api.multi
     def done_cancel(self):
