@@ -622,16 +622,38 @@ class hotel_folio(models.Model):
             room.room_id.write({'isroom': True, 'status': 'available'})
 
     @api.multi
-    def action_invoice_create(self):
+    def action_invoice_create(self, grouped=False, states=None):
         '''
         @param self: object pointer
         '''
-        context = self._context
-        context = dict(context)
-        if not context:
-            context = {}
+        if states is None:
+            states = ['confirmed', 'done']
+        order_ids = [folio.order_id.id for folio in self]
+        room_lst = []
+        sale_obj = self.env['sale.order'].browse(order_ids)
+        invoice_id = (sale_obj.action_invoice_create
+                      (grouped=False, states=['confirmed', 'done']))
+        for line in self:
+            values = {'invoiced': True,
+                      'state': 'progress' if grouped else 'progress',
+                      'hotel_invoice_id': invoice_id
+                      }
+            line.write(values)
+            for rec in line.room_lines:
+                room_lst.append(rec.product_id)
+            for room in room_lst:
+                room_obj = self.env['hotel.room'
+                                    ].search([('name', '=', room.name)])
+                room_obj.write({'isroom': True})
+        return invoice_id
+
+    @api.multi
+    def folio_invoice_create(self):
+        '''
+        @param self: object pointer
+        '''
+        context = dict(self._context)
         context.update({'depends': {}})
-        self.env.args = cr, uid, frozendict(context)
         context.update({'active_model':'sale.order',
                         'active_ids': [self.order_id.id],
                         'active_id': self.order_id.id

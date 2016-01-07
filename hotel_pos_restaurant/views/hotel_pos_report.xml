@@ -4,15 +4,14 @@
 
         <!--Report for hotel folio pos order-->
 
-        <report 
+        <report
             id="report_hotel_pos_order"
             string="Hotel Folio Pos Order"
             model="hotel.folio"
             report_type="qweb-pdf"
             file="hotel_pos_restaurant.report_folio_pos"
             name="hotel_pos_restaurant.report_folio_pos"
-            menu="False"
-        />
+            menu="False"/>
 
     </data>
 </openerp>

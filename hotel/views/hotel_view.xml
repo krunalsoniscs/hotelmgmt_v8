@@ -511,7 +511,7 @@
                     <header>
                         <button name="action_confirm" states="draft" string="Confirm Sale"
                             class="btn-primary" type="object" />
-                        <button name="action_invoice_create" string="Create Invoice"
+                        <button name="folio_invoice_create" string="Create Invoice"
                             type="object" class="oe_highlight" attrs="{'invisible': [('invoice_status', '!=', 'to invoice')]}"/>
                         <button name="action_cancel_draft" states="cancel" string="Set to Draft"
                             type="object" icon="gtk-file" class="oe_highlight" />

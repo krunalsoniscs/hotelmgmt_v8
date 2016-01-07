@@ -2,7 +2,6 @@
 <openerp>
     <data noupdate="1">
 
-
         <!--  Food Item Category -->
         <record id="food" model="pos.category">
             <field name="name">Food</field>
