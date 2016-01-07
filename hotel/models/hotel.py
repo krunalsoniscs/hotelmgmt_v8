@@ -90,7 +90,7 @@ class hotel_room_type(models.Model):
 
     cat_id = fields.Many2one('product.category', 'category', required=True,
                              delegate=True, select=True, ondelete='cascade',
-                             help='Hotel Room Parent category')
+                             auto_join=True, help='Hotel Room Parent category')
 
     @api.multi
     def unlink(self):
@@ -121,7 +121,8 @@ class hotel_room_amenities_type(models.Model):
     _description = 'amenities Type'
 
     cat_id = fields.Many2one('product.category', 'category', required=True,
-                             delegate=True, ondelete='cascade',
+                             delegate=True, select=True,
+                             ondelete='cascade', auto_join=True,
                              help='Hotel room amenities parent category')
     
     @api.multi
@@ -141,12 +142,22 @@ class hotel_room_amenities(models.Model):
     _name = 'hotel.room.amenities'
     _description = 'Room amenities'
 
-    room_categ_id = fields.Many2one('product.product', 'Product Category',
-                                    required=True, delegate=True,
-                                    ondelete='cascade')
+    room_amenities_id = fields.Many2one('product.product', 'Product',
+                                    required=True, delegate=True, select=True,
+                                    auto_join=True, ondelete='cascade')
     rcateg_id = fields.Many2one('hotel.room.amenities.type',
                                 'Amenity Category')
-
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.room_amenities_id.unlink()
+        return super(hotel_room_amenities, self).unlink()
 
 class folio_room_line(models.Model):
 
@@ -170,6 +181,7 @@ class hotel_room(models.Model):
 
     product_id = fields.Many2one('product.product', 'Product_id',
                                  required=True, delegate=True,
+                                 select=True, auto_join=True,
                                  ondelete='cascade',help='Hotel room name')
     floor_id = fields.Many2one('hotel.floor', 'Floor No',
                                help='At which floor the room is located.')
@@ -211,6 +223,17 @@ class hotel_room(models.Model):
             vals.update({'color': 5, 'status': 'available'})
         ret_val = super(hotel_room, self).write(vals)
         return ret_val
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.product_id.unlink()
+        return super(hotel_room, self).unlink()
 
     @api.multi
     def set_room_status_occupied(self):
@@ -317,7 +340,8 @@ class hotel_folio(models.Model):
     name = fields.Char('Folio Number', readonly=True, index=True,
                        default='New')
     order_id = fields.Many2one('sale.order', 'Order', delegate=True,
-                               required=True, ondelete='cascade')
+                               required=True, ondelete='cascade',
+                               select=True, auto_join=True)
     checkin_date = fields.Datetime('Check In', required=True, readonly=True,
                                    states={'draft': [('readonly', False)]},
                                    default=_get_checkin_date)
@@ -546,6 +570,7 @@ class hotel_folio(models.Model):
         for records in self:
             if records.state not in ['draft']:
                 raise Warning("You can delete only Draft Folio")
+            records.order_id.unlink()
         return super(hotel_folio, self).unlink()
 
     @api.onchange('warehouse_id')
@@ -756,8 +781,8 @@ class hotel_folio_line(models.Model):
     _description = 'hotel folio1 room line'
 
     order_line_id = fields.Many2one('sale.order.line', string='Order Line',
-                                    required=True, delegate=True,
-                                    ondelete='cascade')
+                                    required=True, delegate=True, select=True,
+                                    auto_join=True, ondelete='cascade')
     folio_id = fields.Many2one('hotel.folio', string='Folio',
                                ondelete='cascade')
     checkin_date = fields.Datetime('Check In', required=True,
@@ -960,6 +985,7 @@ class hotel_service_line(models.Model):
 
     service_line_id = fields.Many2one('sale.order.line', 'Service Line',
                                       required=True, delegate=True,
+                                      select=True, auto_join=True,
                                       ondelete='cascade')
     folio_id = fields.Many2one('hotel.folio', 'Folio', ondelete='cascade')
     ser_checkin_date = fields.Datetime('From Date', required=True,
@@ -1075,7 +1101,8 @@ class hotel_service_type(models.Model):
     _description = "Service Type"
 
     ser_id = fields.Many2one('product.category', 'category', required=True,
-                             delegate=True, select=True, ondelete='cascade')
+                             delegate=True, select=True,
+                             auto_join=True, ondelete='cascade')
 
     @api.multi
     def unlink(self):
@@ -1095,8 +1122,17 @@ class hotel_services(models.Model):
 
     service_id = fields.Many2one('product.product', 'Service_id',
                                  required=True, ondelete='cascade',
-                                 delegate=True)
-
+                                 select=True, auto_join=True, delegate=True)
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.ser_id.unlink()
+        return super(hotel_services, self).unlink()
 
 class res_company(models.Model):
 

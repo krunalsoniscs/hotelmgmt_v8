@@ -21,8 +21,19 @@ class hotel_housekeeping_activity_type(models.Model):
 
     activity_id = fields.Many2one('product.category', 'Category',
                                   required=True, delegate=True,
-                                  ondelete='cascade')
-
+                                  ondelete='cascade', select=True,
+                                  auto_join=True)
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.activity_id.unlink()
+        return super(hotel_housekeeping_activity_type, self).unlink()
 
 class hotel_activity(models.Model):
 
@@ -30,8 +41,19 @@ class hotel_activity(models.Model):
     _description = 'Housekeeping Activity'
 
     h_id = fields.Many2one('product.product', 'Product', required=True,
-                           delegate=True, ondelete='cascade')
-
+                           delegate=True, ondelete='cascade', select=True,
+                           auto_join=True)
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.h_id.unlink()
+        return super(hotel_activity, self).unlink()
 
 class hotel_housekeeping(models.Model):
 
