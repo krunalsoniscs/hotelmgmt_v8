@@ -50,7 +50,7 @@
             <field name="act_to" ref="act_hsk_inspect" />
             <field name="signal">inspect</field>
         </record>
-        <record id="housekeepingTransition_cancel" model="workflow.transition" >
+        <record id="housekeepingTransition_cancel_from_clean" model="workflow.transition" >
             <field name="act_from" ref="act_hsk_clean" />
             <field name="act_to" ref="act_hsk_cancel" />
             <field name="signal">cancel</field>

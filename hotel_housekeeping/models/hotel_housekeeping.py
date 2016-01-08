@@ -154,6 +154,17 @@ class hotel_housekeeping(models.Model):
         self.write({'state': 'clean'})
         return True
 
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            if records.state != 'dirty':
+                raise Warning("You can delete only dirty Housekeeping Record")
+        return super(hotel_housekeeping, self).unlink()
+
 
 class hotel_housekeeping_activities(models.Model):
 
