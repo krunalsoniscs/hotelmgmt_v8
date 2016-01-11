@@ -564,15 +564,17 @@ class hotel_reservation_line(models.Model):
         for room in hotel_room_ids:
             assigned_room = self.env['hotel.room.reservation.line'].\
                     search([
+                            ('status', '=', 'confirm'),
+                            ('room_id', '=', room.id),
                             ('room_id.categ_id', '=', self.categ_id.id),
-                            '|','&',('check_in', '>=',self.line_id.checkin),
-                            ('check_in', '<=',self.line_id.checkout),
-                            '&',('check_out', '<=',self.line_id.checkin),
+                            '&','|',
+                            ('check_in', '<=',self.line_id.checkin),
+                            ('check_out', '<=',self.line_id.checkin),
+                            '|',
+                            ('check_in', '>=',self.line_id.checkout),
                             ('check_out', '>=',self.line_id.checkout),
                            ])
-            if assigned_room:
-                assigned = True
-            else:
+            if not assigned_room:
                 room_ids.append(room.id)
         domain = {'reserve': [('id', 'in', room_ids)]}
         return {'domain': domain}
