@@ -76,7 +76,7 @@
             <field name="name">hotel_restaurant_tables.tree</field>
             <field name="model">hotel.restaurant.tables</field>
             <field name="arch" type="xml">
-                <tree string="Tables Detail">
+                <tree string="Tables Detail" editable="top">
                     <field name="name"/>
                     <field name="capacity"/>
                 </tree>

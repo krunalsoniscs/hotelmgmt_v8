@@ -42,6 +42,17 @@ class HotelMenucardType(models.Model):
 
     menu_id = fields.Many2one('product.category', 'Category', required=True,
                               delegate=True, ondelete='cascade')
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.menu_id.unlink()
+        return super(HotelMenucardType, self).unlink()
 
 
 class HotelMenucard(models.Model):
@@ -144,6 +155,9 @@ class HotelRestaurantReservation(models.Model):
         @return: change a state depending on the condition
         """
         for reservation in self:
+            if not reservation.tableno.ids:
+                raise except_orm(_('Warning'),
+                                 _('Please Select Tables For Reservation'))
             self._cr.execute("select count(*) from "
                              "hotel_restaurant_reservation as hrr "
                              "inner join reservation_table as rt on \
@@ -160,9 +174,6 @@ class HotelRestaurantReservation(models.Model):
                               reservation.id, reservation.id))
             res = self._cr.fetchone()
             roomcount = res and res[0] or 0.0
-            if len(reservation.tableno.ids) == 0:
-                raise except_orm(_('Warning'),
-                                 _('Please Select Tables For Reservation'))
             if roomcount:
                 raise except_orm(_('Warning'), _('You tried to confirm \
                 reservation with table those already reserved in this \
@@ -224,8 +235,8 @@ class HotelRestaurantReservation(models.Model):
                                relation='reservation_table',
                                column1='reservation_table_id',
                                column2='name', string='Table Number',
-                               readonly= False,
-                               states={'done': [('readonly', True)]},
+                               readonly= True,
+                               states={'draft': [('readonly', False)]},
                                help="Table reservation detail. ")
     state = fields.Selection([('draft', 'Draft'), ('confirm', 'Confirmed'),
                               ('done', 'Done'), ('cancel', 'Cancelled'),
@@ -259,7 +270,8 @@ class HotelRestaurantReservation(models.Model):
         @param self: object pointer
         @return: raise a warning depending on the validation
         '''
-        if self.start_date >= self.end_date:
+        if self.start_date and self.end_date  and \
+           self.start_date >= self.end_date:
             raise ValidationError(_('Start Date Should be less \
             than the End Date!'))
 
@@ -319,7 +331,7 @@ class HotelRestaurantOrder(models.Model):
         '''
         room_ids = []
         for rec in self:
-            if rec.folio_id:
+             if rec.folio_id:
                 self.cname = rec.folio_id.partner_id.id
                 room_ids = [room_line.product_id.id 
                     for room_line in rec.folio_id.room_lines]
@@ -357,10 +369,10 @@ class HotelRestaurantOrder(models.Model):
         """
         res = []
         for order in self:
-            if len(order.order_list.ids) == 0:
+            if not order.order_list.ids:
                 raise except_orm(_('No Order Given'),
                                  _('Please Give an Order'))
-            if len(order.table_no.ids) == 0:
+            if not order.table_no.ids:
                 raise except_orm(_('No Table Assigned '),
                                  _('Please Assign a Table'))
             table_ids = [x.id for x in order.table_no]
@@ -554,7 +566,7 @@ class HotelReservationOrder(models.Model):
         """
         res = []
         for order in self:
-            if len(order.order_list) == 0:
+            if not order.order_list:
                 raise except_orm(_('No Order Given'),
                                  _('Please Give an Order'))
             table_ids = [x.id for x in order.table_no]
@@ -727,8 +739,7 @@ class HotelRestaurantOrderList(models.Model):
         ---------------------------------------------
         @param self: object pointer
         '''
-        if self.name:
-            self.item_rate = self.name.list_price
+        self.item_rate = self.name and self.name.list_price or 0.0
 
     _name = "hotel.restaurant.order.list"
     _description = "Includes Hotel Restaurant Order"

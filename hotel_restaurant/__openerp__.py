@@ -11,7 +11,7 @@
     "depends": ["hotel"],
     "license": "",
     "demo": [
-        "views/hotel_restaurant_data.xml",
+        "data/hotel_restaurant_data.xml",
     ],
     "data": [
         "security/ir.model.access.csv",

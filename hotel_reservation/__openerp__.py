@@ -9,7 +9,7 @@
     "website": "http://www.serpentcs.com",
     "depends": ["hotel", "stock", 'mail'],
     "demo": [
-        "views/hotel_reservation_data.xml",
+        "data/hotel_reservation_data.xml",
     ],
     "data": [
         "security/ir.model.access.csv",

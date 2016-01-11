@@ -164,7 +164,7 @@
                 <xpath expr="//page[@name='information_hotel_room']" position="after">
                     <page string = "Room Reservation">
                         <separator colspan='4' string="Room Reservation Line" />
-                        <field name="room_reservation_line_ids" colspan="4" nolabel='1' string="Room Reservation Line">
+                        <field name="room_reservation_line_ids" colspan="4" nolabel='1' string="Room Reservation Line" readonly="1">
                             <form string=" Room line" >
                                 <group colspan='4' col='4'>
                                     <field name="room_id"/>
@@ -259,6 +259,8 @@
                              <field name="partner_invoice_id"/>
                              <field name="partner_order_id"/>
                              <field name="partner_shipping_id"/>
+                             <field name="adults"/>
+                             <field name="children"/>
                          </group>
                      </sheet>
                      <footer>
