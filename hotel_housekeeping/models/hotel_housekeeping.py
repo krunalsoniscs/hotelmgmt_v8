@@ -32,7 +32,8 @@ class hotel_housekeeping_activity_type(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.activity_id.unlink()
+            if records.activity_id:
+                records.activity_id.unlink()
         return super(hotel_housekeeping_activity_type, self).unlink()
 
 class hotel_activity(models.Model):
@@ -52,7 +53,8 @@ class hotel_activity(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.h_id.unlink()
+            if records.h_id:
+                records.h_id.unlink()
         return super(hotel_activity, self).unlink()
 
 class hotel_housekeeping(models.Model):

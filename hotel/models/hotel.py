@@ -100,7 +100,8 @@ class hotel_room_type(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.cat_id.unlink()
+            if records.cat_id:
+                records.cat_id.unlink()
         return super(hotel_room_type, self).unlink()
 
 
@@ -163,7 +164,8 @@ class hotel_room_amenities_type(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.cat_id.unlink()
+            if records.cat_id:
+                records.cat_id.unlink()
         return super(hotel_room_amenities_type, self).unlink()
 
 
@@ -195,7 +197,8 @@ class hotel_room_amenities(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.room_amenities_id.unlink()
+            if records.room_amenities_id:
+                records.room_amenities_id.unlink()
         return super(hotel_room_amenities, self).unlink()
 
 
@@ -281,7 +284,8 @@ class hotel_room(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.product_id.unlink()
+            if records.product_id:
+                records.product_id.unlink()
         return super(hotel_room, self).unlink()
 
     @api.multi
@@ -619,7 +623,8 @@ class hotel_folio(models.Model):
         for records in self:
             if records.state not in ['draft']:
                 raise Warning("You can delete only Draft Folio")
-            records.order_id.unlink()
+            if records.order_id:
+                records.order_id.unlink()
         return super(hotel_folio, self).unlink()
 
     @api.onchange('warehouse_id')
@@ -1200,7 +1205,8 @@ class hotel_service_type(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.ser_id.unlink()
+            if records.ser_id:
+                records.ser_id.unlink()
         return super(hotel_service_type, self).unlink()
 
 class hotel_services(models.Model):
@@ -1229,7 +1235,8 @@ class hotel_services(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.service_id.unlink()
+            if records.service_id:
+                records.service_id.unlink()
         return super(hotel_services, self).unlink()
 
 class res_company(models.Model):

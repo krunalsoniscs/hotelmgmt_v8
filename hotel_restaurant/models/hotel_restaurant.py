@@ -52,7 +52,8 @@ class HotelMenucardType(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.menu_id.unlink()
+            if records.menu_id:
+                records.menu_id.unlink()
         return super(HotelMenucardType, self).unlink()
 
 
@@ -76,7 +77,8 @@ class HotelMenucard(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.product_id.unlink()
+            if records.product_id:
+                records.product_id.unlink()
         return super(HotelMenucard, self).unlink()
 
 
