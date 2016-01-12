@@ -109,26 +109,28 @@ class product_product(models.Model):
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        if not self._context.get('checkin'):
-            raise except_orm(_('Warning'),
-                             _('Before choosing a room,\n You have to select \
-                             a Check in date or a Check out date in \
-                             the form.'))
-        room_ids = []
-        hotel_room = self.env['hotel.room'].search([])
-        for rooms in hotel_room:
+        context = self._context or {}
+        args = args or []
+        if context.has_key('checkin') and context.has_key('checkout'):
+            if not context.get('checkin') or  not context.get('checkout'):
+                raise except_orm(_('Warning'),
+                                 _('Before choosing a room,\n You have to select \
+                                 a Check in date or a Check out date in \
+                                 the form.'))
+            room_ids = []
             assigned_room = self.env['folio.room.line'
-                                    ].search(['&','|',
-                                               ('check_in','>=', str(self._context.get('checkin'))),
-                                               ('check_out','>=', str(self._context.get('checkin'))),
-                                                '|',
-                                                ('check_in','<=', str(self._context.get('checkout'))),
-                                                ('check_out','<=', str(self._context.get('checkout')))
-                                               ])
-            for product_id in assigned_room:
-                if product_id.room_id.product_id.id != rooms.product_id.id:
-                    room_ids.append(rooms.product_id.id)
-        args = (args or []) + [('id', 'in', room_ids)]
+                                        ].search([ 
+                                                   ('status', 'in', ['sale']),
+                                                   '&','|',
+                                                   ('check_in','>=', str(context.get('checkin'))),
+                                                   ('check_out','>=', str(context.get('checkin'))),
+                                                    '|',
+                                                    ('check_in','<=', str(context.get('checkout'))),
+                                                    ('check_out','<=', str(context.get('checkout'))),
+                                                   ])
+            for room_line in assigned_room:
+                room_ids.append(room_line.room_id.product_id.id)
+            args = (args or []) + [('id', 'not in', room_ids),('is_active_room','=','True')]
         return super(product_product, self).name_search(name=name, args=args, operator=operator, limit=limit)
 
     _inherit = "product.product"
@@ -139,6 +141,8 @@ class product_product(models.Model):
                                help='Product category')
     isservice = fields.Boolean('Is Service id',
                                help='Product type is hotel Service')
+    is_active_room = fields.Boolean('Is Active Room?',
+                            help='Product type is hotel room')
 
 
 class hotel_room_amenities_type(models.Model):
@@ -164,6 +168,15 @@ class hotel_room_amenities_type(models.Model):
 
 
 class hotel_room_amenities(models.Model):
+
+    @api.model
+    def default_get(self, fields):
+        if self._context is None:
+            self._context = {}
+        cat_id = self.env['product.category'].search([('isamenitytype', '=', 'True')])
+        res = super(hotel_room_amenities, self).default_get(fields)
+        res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
+        return res
 
     _name = 'hotel.room.amenities'
     _description = 'Room amenities'
@@ -202,6 +215,15 @@ class folio_room_line(models.Model):
 
 
 class hotel_room(models.Model):
+
+    @api.model
+    def default_get(self, fields):
+        if self._context is None:
+            self._context = {}
+        cat_id = self.env['product.category'].search([('isroomtype', '=', 'True')])
+        res = super(hotel_room, self).default_get(fields)
+        res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
+        return res
 
     _name = 'hotel.room'
     _description = 'Hotel Room'
@@ -730,6 +752,21 @@ class hotel_folio(models.Model):
     @api.multi
     def action_confirm(self):
         for order in self:
+            for room_line in order.room_lines:
+                assigned_room = self.env['folio.room.line'
+                                        ].search([ ('room_id.product_id', '=', room_line.product_id.id),
+                                                   ('status', 'in', ['sale']),
+                                                   '&','|',
+                                                   ('check_in','>=',room_line.checkin_date),
+                                                   ('check_out','>=', room_line.checkin_date),
+                                                    '|',
+                                                    ('check_in','<=', room_line.checkout_date),
+                                                    ('check_out','<=', room_line.checkout_date),
+                                                   ])
+                if assigned_room:
+                    raise except_orm(_('Warning'),
+                                 _('You tried to confirm \
+                        folio with room those already reserved.\n Reserve Room is = '+assigned_room.room_id.name))
             order.order_id.state = 'sale'
             order.order_id.order_line._action_procurement_create()
             if not order.order_id.project_id:
@@ -1168,6 +1205,16 @@ class hotel_service_type(models.Model):
 
 class hotel_services(models.Model):
 
+    @api.model
+    def default_get(self, fields):
+        if self._context is None:
+            self._context = {}
+        res = super(hotel_services, self).default_get(fields)
+        cat_id = self.env['product.category'].search([('isservicetype', '=', 'True')])
+        res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
+        return res
+
+
     _name = 'hotel.services'
     _description = 'Hotel Services and its charges'
 
@@ -1182,7 +1229,7 @@ class hotel_services(models.Model):
         @return: True/False.
         """
         for records in self:
-            records.ser_id.unlink()
+            records.service_id.unlink()
         return super(hotel_services, self).unlink()
 
 class res_company(models.Model):
