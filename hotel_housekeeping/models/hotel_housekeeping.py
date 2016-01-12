@@ -3,7 +3,7 @@
 
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT
 from openerp import models, fields, api, _, netsvc
-from openerp.exceptions import ValidationError
+from openerp.exceptions import ValidationError, Warning
 import time
 
 
@@ -38,6 +38,16 @@ class hotel_housekeeping_activity_type(models.Model):
 
 class hotel_activity(models.Model):
 
+    @api.model
+    def default_get(self, fields):
+        if self._context is None:
+            self._context = {}
+        cat_id = self.env['product.category'
+                          ].search([('isactivitytype', '=', 'True')])
+        res = super(hotel_activity, self).default_get(fields)
+        res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
+        return res
+
     _name = 'hotel.activity'
     _description = 'Housekeeping Activity'
 
@@ -56,7 +66,7 @@ class hotel_activity(models.Model):
             if records.h_id:
                 records.h_id.unlink()
         return super(hotel_activity, self).unlink()
-
+    
 class hotel_housekeeping(models.Model):
 
     _name = "hotel.housekeeping"
@@ -156,6 +166,7 @@ class hotel_housekeeping(models.Model):
         self.write({'state': 'clean'})
         return True
 
+    @api.multi
     def unlink(self):
         """
         Overrides orm unlink method.

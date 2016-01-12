@@ -59,6 +59,16 @@ class HotelMenucardType(models.Model):
 
 class HotelMenucard(models.Model):
 
+    @api.model
+    def default_get(self, fields):
+        if self._context is None:
+            self._context = {}
+        cat_id = self.env['product.category'
+                          ].search([('ismenutype', '=', 'True')])
+        res = super(HotelMenucard, self).default_get(fields)
+        res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
+        return res
+
     _name = 'hotel.menucard'
     _description = 'Hotel Menucard'
 
