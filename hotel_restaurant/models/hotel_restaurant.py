@@ -38,10 +38,11 @@ class ProductProduct(models.Model):
 class HotelMenucardType(models.Model):
 
     _name = 'hotel.menucard.type'
-    _description = 'Amenities Type'
+    _description = 'MenuCard Type'
 
     menu_id = fields.Many2one('product.category', 'Category', required=True,
-                              delegate=True, ondelete='cascade')
+                              delegate=True, ondelete='cascade',
+                              select=True, auto_join=True)
     
     @api.multi
     def unlink(self):
@@ -61,10 +62,22 @@ class HotelMenucard(models.Model):
     _description = 'Hotel Menucard'
 
     product_id = fields.Many2one('product.product', 'Product', required=True,
-                                 delegate=True, ondelete='cascade')
+                                 delegate=True, ondelete='cascade',
+                                 select=True, auto_join=True)
     image = fields.Binary("Image",
                           help="This field holds the image used as image "
                           "for the product, limited to 1024x1024px.")
+    
+    @api.multi
+    def unlink(self):
+        """
+        Overrides orm unlink method.
+        @param self: The object pointer
+        @return: True/False.
+        """
+        for records in self:
+            records.product_id.unlink()
+        return super(HotelMenucard, self).unlink()
 
 
 class HotelRestaurantTables(models.Model):
@@ -99,7 +112,7 @@ class HotelRestaurantReservation(models.Model):
                 'is_folio': record.is_folio,
             }
             self.env['hotel.reservation.order'].create(values)
-        self.write({'state': 'order'})
+            record.write({'state': 'order'})
         return True
 
     @api.onchange('cname')
@@ -109,9 +122,8 @@ class HotelRestaurantReservation(models.Model):
         in Adress field
         @param self: object pointer
         '''
-        if not self.cname:
-            self.partner_address_id = False
-        else:
+        self.partner_address_id = False
+        if self.cname:
             addr = self.cname.address_get(['default'])
             self.partner_address_id = addr['default']
 

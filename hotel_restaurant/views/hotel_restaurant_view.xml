@@ -132,7 +132,18 @@
                             </group>
                             <group colspan="4">
                                 <separator colspan='4' string="Table List"/>
-                                <field name="tableno" colspan="4" nolabel='1'/>
+                                <field name="tableno" colspan="4" nolabel='1'>
+                                    <tree string="Table">
+                                        <field name="name"/>
+                                        <field name="capacity"/>
+                                    </tree>
+                                    <form string="Table">
+                                        <group>
+                                            <field name="name" readonly="True"/>
+                                            <field name="capacity" readonly="True"/>
+                                        </group>
+                                    </form>
+                                </field>
                             </group>
                         </group>
                     </sheet>
@@ -456,7 +467,18 @@
                             </group>
                             <newline/>
                             <separator colspan='4' string='Table List'/>
-                            <field name="tableno" select="1" colspan="4" nolabel='1'/>
+                            <field name="tableno" select="1" colspan="4" nolabel='1'>
+                                <tree string="Table">
+                                    <field name="name"/>
+                                    <field name="capacity"/>
+                                </tree>
+                                <form string="Table">
+                                    <group>
+                                        <field name="name" readonly="True"/>
+                                        <field name="capacity" readonly="True"/>
+                                    </group>
+                                </form>
+                            </field>
                             <newline/>
                             <separator colspan='4' string='Order List'/>
                             <field name="kot_list" colspan="4" nolabel='1'>
