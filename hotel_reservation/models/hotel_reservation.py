@@ -62,6 +62,55 @@ def _offset_format_timestamp_extended(src_tstamp_str, src_format, dst_format,
     return res
 
 
+class product_product(models.Model):
+
+    @api.model
+    def name_search(self, name='', args=None,
+                    operator='ilike', limit=100):
+        context = dict(self._context) or {}
+        args = args or []
+        if context.has_key('checkin') and context.has_key('checkout'):
+            if not context.get('checkin') or  not context.get('checkout'):
+                raise except_orm(_('Warning'),
+                                 _('Before choosing a room,\n You have to select \
+                                 a Check in date or a Check out date in \
+                                 the form.'))
+            room_ids = []
+            checkin = str(context.get('checkin'))
+            checkout = str(context.get('checkout'))
+            assigned_room = self.env['hotel.room.reservation.line'].\
+                                    search([
+                                            ('status', '=', 'confirm'),
+                                            '&','|',
+                                            ('check_in', '>=',checkin),
+                                            ('check_out', '>=',checkin),
+                                            '|',
+                                            ('check_in', '<=',checkout),
+                                            ('check_out', '<=',checkout),
+                                           ])
+            for room_line in assigned_room:
+                if room_line.room_id.product_id.id not in room_ids:
+                    room_ids.append(room_line.room_id.product_id.id)
+            folio_line_ids = self.env['folio.room.line'].\
+                                search([ 
+                                   ('status', 'not in', ['done', 'cancel']),
+                                   '&','|',
+                                   ('check_in','>=', checkin),
+                                   ('check_out','>=', checkin),
+                                    '|',
+                                    ('check_in','<=', checkout),
+                                    ('check_out','<=', checkout),
+                                   ])
+            for folio_line in folio_line_ids:
+                if folio_line.room_id.product_id.id not in room_ids:
+                    room_ids.append(room_line.room_id.product_id.id)
+            if room_ids:
+                args.extend([('id', 'not in', room_ids),('is_active_room','=','True')])
+        return super(product_product, self).name_search(name=name, args=args,
+                                                        operator=operator, limit=limit)
+        
+    _inherit = "product.product"
+
 class hotel_folio(models.Model):
 
     _inherit = 'hotel.folio'
@@ -550,7 +599,7 @@ class hotel_reservation_line(models.Model):
         -----------------------------------------------------------
         @param self: object pointer
         '''
-        if not self.line_id.checkin:
+        if not self.line_id.checkin or not self.line_id.checkout:
             raise except_orm(_('Warning'),
                              _('Before choosing a room,\n You have to select \
                              a Check in date or a Check out date in \
@@ -558,25 +607,32 @@ class hotel_reservation_line(models.Model):
         if not self.categ_id:
             return {'domain': {'reserve': [('id', 'in', [])]}}
         room_ids = []
-        hotel_room_ids = self.env['hotel.room'].search([('categ_id', '=',
-                                                 self.categ_id.id),
-                                                ])
-        for room in hotel_room_ids:
-            assigned_room = self.env['hotel.room.reservation.line'].\
-                    search([
-                            ('status', '=', 'confirm'),
-                            ('room_id', '=', room.id),
-                            ('room_id.categ_id', '=', self.categ_id.id),
-                            '&','|',
-                            ('check_in', '<=',self.line_id.checkin),
-                            ('check_out', '<=',self.line_id.checkin),
-                            '|',
-                            ('check_in', '>=',self.line_id.checkout),
-                            ('check_out', '>=',self.line_id.checkout),
-                           ])
-            if not assigned_room:
-                room_ids.append(room.id)
-        domain = {'reserve': [('id', 'in', room_ids)]}
+        assigned_room = self.env['hotel.room.reservation.line'].\
+                search([
+                        ('status', '=', 'confirm'),
+                        ('room_id.categ_id', '=', self.categ_id.id),
+                        '&','|',
+                        ('check_in', '>=',self.line_id.checkin),
+                        ('check_out', '>=',self.line_id.checkin),
+                        '|',
+                        ('check_in', '<=',self.line_id.checkout),
+                        ('check_out', '<=',self.line_id.checkout),
+                       ])
+        folio_line_ids = self.env['folio.room.line'].\
+                        search([ 
+                               ('status', 'not in', ['done', 'cancel']),
+                               ('room_id.categ_id', '=', self.categ_id.id),
+                               '&','|',
+                                ('check_in', '>=',self.line_id.checkin),
+                                ('check_out', '>=',self.line_id.checkin),
+                                '|',
+                                ('check_in', '<=',self.line_id.checkout),
+                                ('check_out', '<=',self.line_id.checkout),
+                               ])
+        room_ids.extend([room.room_id.id for room in assigned_room])
+        room_ids.extend([room.room_id.id for room in folio_line_ids])
+        room_ids = list(set(room_ids))
+        domain = {'reserve': [('id', 'not in', room_ids),('categ_id', '=', self.categ_id.id)]}
         return {'domain': domain}
 
     @api.multi

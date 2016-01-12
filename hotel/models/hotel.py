@@ -107,10 +107,10 @@ class hotel_room_type(models.Model):
 
 class product_product(models.Model):
 
-
     @api.model
-    def name_search(self, name='', args=None, operator='ilike', limit=100):
-        context = self._context or {}
+    def name_search(self, name='', args=None, operator='ilike',
+                    limit=100):
+        context = dict(self._context) or {}
         args = args or []
         if context.has_key('checkin') and context.has_key('checkout'):
             if not context.get('checkin') or  not context.get('checkout'):
@@ -119,20 +119,25 @@ class product_product(models.Model):
                                  a Check in date or a Check out date in \
                                  the form.'))
             room_ids = []
-            assigned_room = self.env['folio.room.line'
-                                        ].search([ 
-                                                   ('status', 'in', ['sale']),
-                                                   '&','|',
-                                                   ('check_in','>=', str(context.get('checkin'))),
-                                                   ('check_out','>=', str(context.get('checkin'))),
-                                                    '|',
-                                                    ('check_in','<=', str(context.get('checkout'))),
-                                                    ('check_out','<=', str(context.get('checkout'))),
-                                                   ])
+            checkin = str(context.get('checkin'))
+            checkout = str(context.get('checkout'))
+            assigned_room = self.env['folio.room.line'].\
+                                        search([ 
+                                               ('status', '=', 'sale'),
+                                               '&','|',
+                                               ('check_in','>=', checkin),
+                                               ('check_out','>=', checkin),
+                                                '|',
+                                                ('check_in','<=', checkout),
+                                                ('check_out','<=', checkout),
+                                               ])
             for room_line in assigned_room:
-                room_ids.append(room_line.room_id.product_id.id)
-            args = (args or []) + [('id', 'not in', room_ids),('is_active_room','=','True')]
-        return super(product_product, self).name_search(name=name, args=args, operator=operator, limit=limit)
+                if room_line.room_id.product_id.id not in room_ids:
+                    room_ids.append(room_line.room_id.product_id.id)
+            if room_ids:
+                args.extend([('id', 'not in', room_ids),('is_active_room','=','True')])
+        return super(product_product, self).name_search(name=name, args=args,
+                                                        operator=operator, limit=limit)
 
     _inherit = "product.product"
 
