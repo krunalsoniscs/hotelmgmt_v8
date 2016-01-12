@@ -102,8 +102,34 @@ class hotel_room_type(models.Model):
         for records in self:
             records.cat_id.unlink()
         return super(hotel_room_type, self).unlink()
-    
+
+
 class product_product(models.Model):
+
+
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        if not self._context.get('checkin'):
+            raise except_orm(_('Warning'),
+                             _('Before choosing a room,\n You have to select \
+                             a Check in date or a Check out date in \
+                             the form.'))
+        room_ids = []
+        hotel_room = self.env['hotel.room'].search([])
+        for rooms in hotel_room:
+            assigned_room = self.env['folio.room.line'
+                                    ].search(['&','|',
+                                               ('check_in','>=', str(self._context.get('checkin'))),
+                                               ('check_out','>=', str(self._context.get('checkin'))),
+                                                '|',
+                                                ('check_in','<=', str(self._context.get('checkout'))),
+                                                ('check_out','<=', str(self._context.get('checkout')))
+                                               ])
+            for product_id in assigned_room:
+                if product_id.room_id.product_id.id != rooms.product_id.id:
+                    room_ids.append(rooms.product_id.id)
+        args = (args or []) + [('id', 'in', room_ids)]
+        return super(product_product, self).name_search(name=name, args=args, operator=operator, limit=limit)
 
     _inherit = "product.product"
 
@@ -158,6 +184,7 @@ class hotel_room_amenities(models.Model):
         for records in self:
             records.room_amenities_id.unlink()
         return super(hotel_room_amenities, self).unlink()
+
 
 class folio_room_line(models.Model):
 
@@ -799,6 +826,7 @@ class hotel_folio_line(models.Model):
             return self._context['checkout']
         return time.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
+
     _name = 'hotel.folio.line'
     _description = 'hotel folio1 room line'
 
@@ -862,6 +890,7 @@ class hotel_folio_line(models.Model):
             line.uos_change(product_uos, product_uos_qty=0,
                             product_id=None)
         return True
+
 
     @api.onchange('product_id')
     def product_id_change(self):
