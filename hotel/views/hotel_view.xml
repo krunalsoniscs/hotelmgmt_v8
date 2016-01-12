@@ -298,8 +298,9 @@
                             </h4>
                             <h2>
                                 <field name="isroom" />
-                                <field name="is_active_room"/>
                             </h2>
+                            <newline/>
+                            <field name="is_active_room"/>
                         </group>
                         <notebook>
                             <page name="information_hotel_room" string="Information">

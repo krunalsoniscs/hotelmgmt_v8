@@ -25,7 +25,7 @@
                             <group>
                                 <field name="current_date" select="1" />
                                 <field name="clean_type" />
-                                <field name="room_no" select="1" domain="[('isroom','=',True)]" />
+                                <field name="room_no" select="1" domain="[('is_active_room','=',True)]" />
                             </group>
                             <group>
                                 <field name="inspector" />
