@@ -56,8 +56,7 @@ class pos_order(models.Model):
             if rec.folio_id:
                 self.partner_id = rec.folio_id.partner_id.id
                 if rec.folio_id.room_lines:
-                    self.room_no = rec.folio_id.room_lines[0].product_id.name
-
+                    self.room_no = ','.join(map(str,[room.product_id.name for room in rec.folio_id.room_lines]))
     @api.multi
     def action_paid(self):
         '''

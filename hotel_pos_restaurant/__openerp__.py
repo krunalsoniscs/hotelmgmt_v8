@@ -8,7 +8,7 @@
     "category": "Generic Modules/Hotel Restaurant Management",
     "website": "http://www.serpentcs.com",
     "depends": ["pos_restaurant", "hotel"],
-    "demo": ["views/hotel_pos_data.xml"],
+    "demo": ["data/hotel_pos_data.xml"],
     "data": ["security/ir.model.access.csv",
              "views/pos_restaurent_view.xml",
              "views/hotel_pos_report.xml",

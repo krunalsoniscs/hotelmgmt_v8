@@ -15,7 +15,7 @@ class folio_report1(report_sxw.rml_parse):
                                   'getTotal': self.getTotal,
                                   'get_pos': self.get_pos,
                                   })
-        self.temp = 0.0
+        self.total_amount = 0.0
 
     def get_data(self, date_start, date_end):
         folio_obj = self.pool.get('hotel.folio')
@@ -45,11 +45,11 @@ class folio_report1(report_sxw.rml_parse):
         amount = 0.0
         for x in pos_order:
             amount = amount + float(x.amount_total)
-        self.temp = self.temp + amount
+        self.total_amount += amount
         return amount
 
     def getTotal(self):
-        return self.temp
+        return self.total_amount
 
 
 class report_lunchorder1(models.AbstractModel):
