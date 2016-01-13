@@ -115,7 +115,8 @@ class product_product(models.Model):
         if context.has_key('checkin') and context.has_key('checkout'):
             if not context.get('checkin') or  not context.get('checkout'):
                 raise except_orm(_('Warning'),
-                                 _('Before choosing a room,\n You have to select \
+                                 _('Before choosing a room,\n \
+                                 You have to select \
                                  a Check in date or a Check out date in \
                                  the form.'))
             room_ids = []
@@ -138,7 +139,8 @@ class product_product(models.Model):
             if room_ids:
                 args.extend([('id', 'not in', room_ids)])
         return super(product_product, self).name_search(name=name, args=args,
-                                                        operator=operator, limit=limit)
+                                                        operator=operator,
+                                                        limit=limit)
 
     _inherit = "product.product"
 
@@ -181,7 +183,9 @@ class hotel_room_amenities(models.Model):
     def default_get(self, fields):
         if self._context is None:
             self._context = {}
-        cat_id = self.env['product.category'].search([('isamenitytype', '=', 'True')])
+        cat_id = self.env['product.category'].search([('isamenitytype',
+                                                       '=',
+                                                       'True')])
         res = super(hotel_room_amenities, self).default_get(fields)
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
@@ -229,7 +233,9 @@ class hotel_room(models.Model):
     def default_get(self, fields):
         if self._context is None:
             self._context = {}
-        cat_id = self.env['product.category'].search([('isroomtype', '=', 'True')])
+        cat_id = self.env['product.category'].search([('isroomtype',
+                                                       '=',
+                                                       'True')])
         res = super(hotel_room, self).default_get(fields)
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
@@ -533,6 +539,8 @@ class hotel_folio(models.Model):
         @param vals: dictionary of fields value.
         @return: new record set for hotel folio.
         """
+        if not vals:
+            vals = {}
         if not 'service_lines' and 'folio_id' in vals:
             tmp_room_lines = vals.get('room_lines', [])
             vals['order_policy'] = vals.get('hotel_policy', 'manual')
@@ -543,36 +551,32 @@ class hotel_folio(models.Model):
             vals.update({'room_lines': tmp_room_lines})
             folio_id.write(vals)
         else:
-            if not vals:
-                vals = {}
             vals['name'] = self.env['ir.sequence'].get('hotel.folio')
             folio_id = super(hotel_folio, self).create(vals)
             folio_room_line_obj = self.env['folio.room.line']
+            create_folio_room_line = False
             try:
                 for rec in folio_id:
                     if not rec.reservation_id:
-                        for room_rec in rec.room_lines:
-                            product_name = room_rec.product_id.name
-                            room_obj = self.env['hotel.room'].search([('name', '=', product_name)])
-                            room_obj.write({'isroom': False})
-                            vals = {'room_id': room_obj.id,
-                                    'check_in': rec.checkin_date,
-                                    'check_out': rec.checkout_date,
-                                    'folio_id': rec.id,
-                                    }
-                            folio_room_line_obj.create(vals)
+                        create_folio_room_line = True
             except:
+                create_folio_room_line = True
+            if create_folio_room_line:
                 for rec in folio_id:
                     for room_rec in rec.room_lines:
-                        product_name = room_rec.product_id.name
-                        room_obj = self.env['hotel.room'].search([('name', '=', product_name)])
-                        room_obj.write({'isroom': False})
-                        vals = {'room_id': room_obj.id,
-                                'check_in': rec.checkin_date,
-                                'check_out': rec.checkout_date,
-                                'folio_id': rec.id,
-                                }
-                        folio_room_line_obj.create(vals)
+                        room_ids = self.env['hotel.room'
+                                            ].search([('product_id', '=',
+                                                       room_rec.product_id.id
+                                                       )])
+                        if room_ids:
+                            vals = {'room_id': room_ids.ids[0],
+                                    'check_in': room_rec.checkin_date,
+                                    'check_out': room_rec.checkout_date,
+                                    'folio_id': rec.id,
+                                    }
+                            folio_room_line_id = folio_room_line_obj.create(vals)
+                            room_rec.write({'folio_room_line_id':
+                                            folio_room_line_id.id})
         return folio_id
 
     @api.multi
@@ -582,56 +586,52 @@ class hotel_folio(models.Model):
         @param self: The object pointer
         @param vals: dictionary of fields value.
         """
-        room_list_first = []
-        for rec in self:
-            for res in rec.room_lines:
-                room_list_first.append(res.product_id.id)
-        folio_write = super(hotel_folio, self).write(vals)
-        room_lst = []
-        for folio_obj in self:
-            for folio_rec in folio_obj.room_lines:
-                room_lst.append(folio_rec.product_id.id)
-            new_rooms = set(room_lst).difference(set(room_list_first))
-            if new_rooms:
-                room_list = self.env['product.product'].browse(list(new_rooms))
-                for rm in room_list:
-                    room_obj = self.env['hotel.room'].search([('name', '=', rm.name)])
-                    room_obj.write({'isroom': False})
-                    vals = {'room_id': room_obj.id,
-                            'check_in': folio_obj.checkin_date,
-                            'check_out': folio_obj.checkout_date,
-                            'folio_id': folio_obj.id,
-                            }
-                    self.env['folio.room.line'].create(vals)
-            else:
-                room_list_obj = self.env['product.product'].browse(room_list_first)
-                for rom in room_list_obj:
-                    room_obj = self.env['hotel.room'].search([('name', '=', rom.name)])
-                    room_obj.write({'isroom': False})
-                    room_vals = {'room_id': room_obj.id,
-                                 'check_in': folio_obj.checkin_date,
-                                 'check_out': folio_obj.checkout_date,
-                                 'folio_id': folio_obj.id,
-                                 }
-                    folio_romline_rec = (self.env['folio.room.line'].search
-                                         ([('folio_id', '=', folio_obj.id)]))
-                    folio_romline_rec.write(room_vals)
-        return folio_write
+        res = super(hotel_folio, self).write(vals)
+        vals = vals or {}
+        if vals.get('room_lines'):
+            folio_room_obj = self.env['folio.room.line']
+            for folio in self:
+                create_folio_room_line = False
+                try:
+                    if not folio.reservation_id:
+                        create_folio_room_line = True
+                except:
+                    create_folio_room_line = True
+                if create_folio_room_line:
+                    for room_line in folio.room_lines:
+                        room_ids = self.env['hotel.room'
+                                            ].search([('product_id',
+                                                        '=',
+                                                        room_line.product_id.id
+                                                        )])
+                        if room_ids:
+                            vals = {
+                                    'room_id': room_ids.ids[0],
+                                    'check_in': room_line.checkin_date,
+                                    'check_out': room_line.checkout_date,
+                                    'folio_id': self.id,
+                                }
+                            if room_line.folio_room_line_id:
+                                room_line.folio_room_line_id.write(vals)
+                            else:
+                                folio_room_line_id = folio_room_obj.create(vals)
+                                room_line.write({'folio_room_line_id':
+                                                 folio_room_line_id.id})
+        return res
 
-
-    @api.multi
-    def unlink(self):
-        """
-        Overrides orm unlink method.
-        @param self: The object pointer
-        @return: True/False.
-        """
-        for records in self:
-            if records.state not in ['draft']:
-                raise Warning("You can delete only Draft Folio")
-            if records.order_id:
-                records.order_id.unlink()
-        return super(hotel_folio, self).unlink()
+#    @api.multi
+#    def unlink(self):
+#        """
+#        Overrides orm unlink method.
+#        @param self: The object pointer
+#        @return: True/False.
+#        """
+#        for records in self:
+#            if records.state not in ['draft']:
+#                raise Warning("You can delete only Draft Folio")
+#            if records.order_id:
+#                records.order_id.unlink()
+#        return super(hotel_folio, self).unlink()
 
     @api.onchange('warehouse_id')
     def onchange_warehouse_id(self):
@@ -765,19 +765,26 @@ class hotel_folio(models.Model):
         for order in self:
             for room_line in order.room_lines:
                 assigned_room = self.env['folio.room.line'
-                                        ].search([ ('room_id.product_id', '=', room_line.product_id.id),
+                                        ].search([ ('room_id.product_id',
+                                                    '=',
+                                                    room_line.product_id.id),
                                                    ('status', 'in', ['sale']),
                                                    '&','|',
-                                                   ('check_in','>=',room_line.checkin_date),
-                                                   ('check_out','>=', room_line.checkin_date),
+                                                   ('check_in','>=',
+                                                    room_line.checkin_date),
+                                                   ('check_out','>=',
+                                                    room_line.checkin_date),
                                                     '|',
-                                                    ('check_in','<=', room_line.checkout_date),
-                                                    ('check_out','<=', room_line.checkout_date),
+                                                    ('check_in','<=',
+                                                     room_line.checkout_date),
+                                                    ('check_out','<=',
+                                                     room_line.checkout_date),
                                                    ])
                 if assigned_room:
                     raise except_orm(_('Warning'),
                                  _('You tried to confirm \
-                        folio with room those already reserved.\n Reserve Room is = '+assigned_room.room_id.name))
+                        folio with room those already reserved.\n \
+                         Reserve Room is = '+assigned_room.room_id.name))
             order.order_id.state = 'sale'
             order.order_id.order_line._action_procurement_create()
             if not order.order_id.project_id:
@@ -881,6 +888,7 @@ class hotel_folio_line(models.Model):
     order_line_id = fields.Many2one('sale.order.line', string='Order Line',
                                     required=True, delegate=True, select=True,
                                     auto_join=True, ondelete='cascade')
+    folio_room_line_id = fields.Many2one('folio.room.line',readonly=True)
     folio_id = fields.Many2one('hotel.folio', string='Folio',
                                ondelete='cascade')
     checkin_date = fields.Datetime('Check In', required=True,
@@ -1222,7 +1230,9 @@ class hotel_services(models.Model):
         if self._context is None:
             self._context = {}
         res = super(hotel_services, self).default_get(fields)
-        cat_id = self.env['product.category'].search([('isservicetype', '=', 'True')])
+        cat_id = self.env['product.category'].search([('isservicetype',
+                                                       '=',
+                                                       'True')])
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
 

@@ -72,7 +72,8 @@ class product_product(models.Model):
         if context.has_key('checkin') and context.has_key('checkout'):
             if not context.get('checkin') or  not context.get('checkout'):
                 raise except_orm(_('Warning'),
-                                 _('Before choosing a room,\n You have to select \
+                                 _('Before choosing a room,\n \
+                                 You have to select \
                                  a Check in date or a Check out date in \
                                  the form.'))
             room_ids = []
@@ -134,7 +135,8 @@ class hotel_folio(models.Model):
                 reservation_obj = (self.env['hotel.room.reservation.line'
                                             ].search([('reservation_id',
                                                         '=',
-                                                        folio_rec.reservation_id.id)]))
+                                                        folio_rec.reservation_id.id)
+                                                      ]))
                 if len(reservation_obj) == 1:
                     for line_id in folio_rec.reservation_id.reservation_line:
                         for room_id in line_id.reserve:
@@ -634,7 +636,8 @@ class hotel_reservation_line(models.Model):
         room_ids.extend([room.room_id.id for room in assigned_room])
         room_ids.extend([room.room_id.id for room in folio_line_ids])
         room_ids = list(set(room_ids))
-        domain = {'reserve': [('id', 'not in', room_ids),('categ_id', '=', self.categ_id.id)]}
+        domain = {'reserve': [('id', 'not in', room_ids),
+                              ('categ_id', '=', self.categ_id.id)]}
         return {'domain': domain}
 
     @api.multi
@@ -985,7 +988,7 @@ class quick_room_reservation(models.TransientModel):
                'children': res.children,
                'reservation_line': [(0, 0,
                                      {
-                                      'categ_id': res.room_id.categ_id.id, 
+                                      'categ_id': res.room_id.categ_id.id,
                                       'reserve': [(6, 0, [res.room_id.id])],
                                       'name': (res.room_id and
                                                res.room_id.name or '')
