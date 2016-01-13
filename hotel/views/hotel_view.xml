@@ -572,7 +572,7 @@
                                                     <field name="product_uom_qty"
                                                         context="{'partner_id':parent.partner_id,'quantity':product_uom_qty,'pricelist':parent.pricelist_id,'uom':product_uom}"
                                                         invisible="1" />
-                                                    <field name="product_id"
+                                                    <field name="product_id" domain="[('is_active_room','=','True')]"
                                                         context="{'partner_id':parent.partner_id,'quantity':product_uom_qty,'pricelist':parent.pricelist_id,'uom':product_uom,'checkin':checkin_date,'checkout':checkout_date}"
                                                         select="1" string="Room No"/>
                                                     <field name="product_uom" string="Rent(UOM)" />

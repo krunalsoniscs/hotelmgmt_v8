@@ -121,7 +121,7 @@ class product_product(models.Model):
             room_ids = []
             checkin = str(context.get('checkin'))
             checkout = str(context.get('checkout'))
-            assigned_room = self.env['folio.room.line'].\
+            folio_line_ids = self.env['folio.room.line'].\
                                         search([ 
                                                ('status', '=', 'sale'),
                                                '&','|',
@@ -131,11 +131,12 @@ class product_product(models.Model):
                                                 ('check_in','<=', checkout),
                                                 ('check_out','<=', checkout),
                                                ])
-            for room_line in assigned_room:
-                if room_line.room_id.product_id.id not in room_ids:
-                    room_ids.append(room_line.room_id.product_id.id)
+            for folio_line in folio_line_ids:
+                if (folio_line.room_id and folio_line.room_id.product_id \
+                    and folio_line.room_id.product_id.id not in room_ids):
+                    room_ids.append(folio_line.room_id.product_id.id)
             if room_ids:
-                args.extend([('id', 'not in', room_ids),('is_active_room','=','True')])
+                args.extend([('id', 'not in', room_ids)])
         return super(product_product, self).name_search(name=name, args=args,
                                                         operator=operator, limit=limit)
 
