@@ -122,6 +122,33 @@ class hotel_folio(models.Model):
     reservation_id = fields.Many2one(comodel_name='hotel.reservation',
                                      string='Reservation Id')
 
+    @api.multi
+    def write(self, vals):
+        """
+        Overrides orm write method.
+        @param self: The object pointer
+        @param vals: dictionary of fields value.
+        """
+        folio_write = super(hotel_folio, self).write(vals)
+        for folio_rec in self:
+            if folio_rec.reservation_id:
+                reservation_obj = (self.env['hotel.room.reservation.line'
+                                            ].search([('reservation_id',
+                                                        '=',
+                                                        folio_rec.reservation_id.id)
+                                                      ]))
+                if len(reservation_obj) == 1:
+                    for line_id in folio_rec.reservation_id.reservation_line:
+                        for room_id in line_id.reserve:
+                            vals = {'room_id': room_id.id,
+                                    'check_in': folio_rec.checkin_date,
+                                    'check_out': folio_rec.checkout_date,
+                                    'state': 'assigned',
+                                    'reservation_id': folio_rec.reservation_id.id,
+                                    }
+                            reservation_obj.write(vals)
+        return folio_write
+
 
 class hotel_reservation(models.Model):
 
@@ -333,11 +360,7 @@ class hotel_reservation(models.Model):
                         'state': 'assigned',
                         'reservation_id': reservation.id,
                         }
-                    now = datetime.datetime.now()
-                    curr_date = now.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-                    if (reservation.checkin <= curr_date 
-                        and reservation.checkout >= curr_date):
-                            room_id.write({'isroom': False, 'status': 'occupied'})
+                    room_id.write({'isroom': False, 'status': 'occupied'})
                     reservation_line_obj.create(vals)
         return True
 
@@ -358,11 +381,7 @@ class hotel_reservation(models.Model):
         reservation_lines = self.env['hotel_reservation.line'
                                      ].search([('line_id', 'in', self.ids)])
         for reservation_line in reservation_lines:
-            now = datetime.datetime.now()
-            curr_date = now.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-            if (self.checkin <= curr_date 
-                and self.checkout >= curr_date):
-                    reservation_line.reserve.write({'isroom': True,
+            reservation_line.reserve.write({'isroom': True,
                                             'status': 'available'})
         return True
 
@@ -449,7 +468,6 @@ class hotel_reservation(models.Model):
         """
         hotel_folio_obj = self.env['hotel.folio']
         room_obj = self.env['hotel.room']
-        reservation_line_obj = self.env['hotel.room.reservation.line']
         vals = {}
         for reservation in self:
             folio_lines = []
@@ -493,17 +511,21 @@ class hotel_reservation(models.Model):
                         'price_unit': r['lst_price'],
                         'product_uom_qty': ((date_a - date_b).days) + 1
                     }))
-                    now = datetime.datetime.now()
-                    curr_date = now.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-                    if (checkin_date <= curr_date 
-                        and checkout_date >= curr_date):
-                        r.write({'status': 'occupied', 'isroom': False})
+                    r.write({'status': 'occupied', 'isroom': False})
             folio_vals.update({'room_lines': folio_lines})
             folio = hotel_folio_obj.create(folio_vals)
             self._cr.execute('insert into hotel_folio_reservation_rel'
                              '(order_id, invoice_id) values (%s,%s)',
                              (reservation.id, folio.id)
                              )
+            for line in reservation.reservation_line:
+                for r in line.reserve:
+                    vals = {'room_id': r.id,
+                        'check_in': checkin_date,
+                        'check_out': checkout_date,
+                        'folio_id':folio.id,
+                        }
+                    self.env['folio.room.line'].create(vals)
             reservation.write({'state': 'done'})
         return True
 
