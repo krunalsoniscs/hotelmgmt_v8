@@ -72,10 +72,9 @@ class product_product(models.Model):
         if context.has_key('checkin') and context.has_key('checkout'):
             if not context.get('checkin') or  not context.get('checkout'):
                 raise except_orm(_('Warning'),
-                                 _('Before choosing a room,\n \
-                                 You have to select \
-                                 a Check in date or a Check out date in \
-                                 the form.'))
+                                 _('Before choosing a room,\n You have to \
+                                    select a Check in date or a Check \
+                                    out date in the form.'))
             room_ids = []
             checkin = str(context.get('checkin'))
             checkout = str(context.get('checkout'))
@@ -756,11 +755,9 @@ class room_reservation_summary(models.Model):
         '''
         if self._context is None:
             self._context = {}
-        model_data_ids = self.env['ir.model.data'
-                                  ].search([('model', '=', 'ir.ui.view'),
-                                            ('name',
-                                             '=',
-                                             'view_hotel_reservation_form')])
+        model_data_ids = self.env['ir.model.data'].\
+                        search([('model', '=', 'ir.ui.view'),
+                                ('name', '=', 'view_hotel_reservation_form')])
         resource_id = model_data_ids.read(fields=['res_id'])[0]['res_id']
         return {'name': _('Reconcile Write-Off'),
                 'context': self._context,
@@ -787,32 +784,32 @@ class room_reservation_summary(models.Model):
         date_range_list = []
         main_header = []
         summary_header_list = ['Rooms']
-        date_from = _offset_format_timestamp_extended(str(self.date_from), \
-                        DEFAULT_SERVER_DATETIME_FORMAT,
-                        DEFAULT_SERVER_DATETIME_FORMAT,
-                        context=context, reverse=True)
-        date_to = _offset_format_timestamp_extended(str(self.date_to), \
-                        DEFAULT_SERVER_DATETIME_FORMAT,
-                        DEFAULT_SERVER_DATETIME_FORMAT,
-                        context=context, reverse=True)
-        if date_from and date_to:
-            if date_from > date_to:
+        if self.date_from and self.date_to:
+            if self.date_from > self.date_to:
                 raise except_orm(_('User Error!'),
                                  _('Please Check Time period Date \
                                  From can\'t be greater than Date To !'))
             d_frm_obj = (datetime.datetime.strptime
-                         (date_from, DEFAULT_SERVER_DATETIME_FORMAT))
+                         (self.date_from, DEFAULT_SERVER_DATETIME_FORMAT))
             d_to_obj = (datetime.datetime.strptime
-                        (date_to, DEFAULT_SERVER_DATETIME_FORMAT))
+                        (self.date_to, DEFAULT_SERVER_DATETIME_FORMAT))
             temp_date = d_frm_obj
             while(temp_date.date() <= d_to_obj.date()):
                 val = ''
-                val = (str(temp_date.strftime("%a")) + ' ' +
-                       str(temp_date.strftime("%b")) + ' ' +
-                       str(temp_date.strftime("%d")))
+                def_ser_dt_format = DEFAULT_SERVER_DATETIME_FORMAT
+                tmp_dt_str = temp_date.strftime(def_ser_dt_format)
+                tmp_dt_utc = (datetime.datetime.strptime
+                              (_offset_format_timestamp_extended(
+                                tmp_dt_str,
+                                def_ser_dt_format,
+                                def_ser_dt_format,
+                                context=context, reverse=True),
+                                def_ser_dt_format))
+                val = (str(tmp_dt_utc.strftime("%a")) + ' ' +
+                       str(tmp_dt_utc.strftime("%b")) + ' ' +
+                       str(tmp_dt_utc.strftime("%d")))
                 summary_header_list.append(val)
-                date_range_list.append(temp_date.strftime
-                                       (DEFAULT_SERVER_DATETIME_FORMAT))
+                date_range_list.append(tmp_dt_str)
                 temp_date = temp_date + datetime.timedelta(days=1)
             all_detail.append(summary_header_list)
             room_ids = room_obj.search([])
@@ -821,12 +818,15 @@ class room_reservation_summary(models.Model):
                 room_detail = {}
                 room_list_stats = []
                 room_detail.update({'name': room.name or ''})
-                
                 if not room.room_reservation_line_ids:
                     for chk_date in date_range_list:
-                        
+                        chk_date_tz = _offset_format_timestamp_extended(
+                                            chk_date,
+                                            DEFAULT_SERVER_DATETIME_FORMAT,
+                                            DEFAULT_SERVER_DATETIME_FORMAT,
+                                            context=context, reverse=True)
                         room_list_stats.append({'state': 'Free',
-                                                'date': chk_date,
+                                                'date': chk_date_tz,
                                                 'room_id': room.id,
                                                 })
                 else:
@@ -840,14 +840,19 @@ class room_reservation_summary(models.Model):
                                                 ('check_out', '>=', chk_date),
                                                 ('status','!=','cancel')
                                                 ]))
+                            chk_date_tz = _offset_format_timestamp_extended(
+                                            chk_date,
+                                            DEFAULT_SERVER_DATETIME_FORMAT,
+                                            DEFAULT_SERVER_DATETIME_FORMAT,
+                                            context=context, reverse=True)
                             if reservline_ids:
                                 room_list_stats.append({'state': 'Reserved',
-                                                        'date': chk_date,
+                                                        'date': chk_date_tz,
                                                         'room_id': room.id})
                                 break
                             else:
                                 room_list_stats.append({'state': 'Free',
-                                                        'date': chk_date,
+                                                        'date': chk_date_tz,
                                                         'room_id': room.id})
                                 break
                 room_detail.update({'value': room_list_stats})

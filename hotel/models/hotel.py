@@ -116,9 +116,8 @@ class product_product(models.Model):
             if not context.get('checkin') or  not context.get('checkout'):
                 raise except_orm(_('Warning'),
                                  _('Before choosing a room,\n \
-                                 You have to select \
-                                 a Check in date or a Check out date in \
-                                 the form.'))
+                                    You have to select a Check in date \
+                                    or a Check out date in the form.'))
             room_ids = []
             checkin = str(context.get('checkin'))
             checkout = str(context.get('checkout'))
@@ -183,9 +182,8 @@ class hotel_room_amenities(models.Model):
     def default_get(self, fields):
         if self._context is None:
             self._context = {}
-        cat_id = self.env['product.category'].search([('isamenitytype',
-                                                       '=',
-                                                       'True')])
+        cat_id = self.env['product.category'].\
+                                    search([('isamenitytype', '=', 'True')])
         res = super(hotel_room_amenities, self).default_get(fields)
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
@@ -233,9 +231,8 @@ class hotel_room(models.Model):
     def default_get(self, fields):
         if self._context is None:
             self._context = {}
-        cat_id = self.env['product.category'].search([('isroomtype',
-                                                       '=',
-                                                       'True')])
+        cat_id = self.env['product.category'].\
+                                        search([('isroomtype', '=', 'True')])
         res = super(hotel_room, self).default_get(fields)
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
@@ -765,27 +762,21 @@ class hotel_folio(models.Model):
     def action_confirm(self):
         for order in self:
             for room_line in order.room_lines:
-                assigned_room = self.env['folio.room.line'
-                                        ].search([ ('room_id.product_id',
-                                                    '=',
-                                                    room_line.product_id.id),
-                                                   ('status', 'in', ['sale']),
-                                                   '&','|',
-                                                   ('check_in','>=',
-                                                    room_line.checkin_date),
-                                                   ('check_out','>=',
-                                                    room_line.checkin_date),
-                                                    '|',
-                                                    ('check_in','<=',
-                                                     room_line.checkout_date),
-                                                    ('check_out','<=',
-                                                     room_line.checkout_date),
-                                                   ])
+                domain = [('room_id.product_id', '=', room_line.product_id.id),
+                          ('status', 'in', ['sale']),
+                          '&','|',
+                          ('check_in','>=', room_line.checkin_date),
+                          ('check_out','>=', room_line.checkin_date),
+                          '|',
+                          ('check_in','<=', room_line.checkout_date),
+                          ('check_out','<=', room_line.checkout_date)]
+                assigned_room = self.env['folio.room.line'].search(domain)
                 if assigned_room:
                     raise except_orm(_('Warning'),
-                                 _('You tried to confirm \
-                        folio with room those already reserved.\n \
-                         Reserve Room is = '+assigned_room.room_id.name))
+                                     _('You tried to confirm folio with room \
+                                        those folio with room those already \
+                                        reserved.\n Reserve Room is = ' \
+                                        +assigned_room.room_id.name))
             order.order_id.state = 'sale'
             order.order_id.order_line._action_procurement_create()
             if not order.order_id.project_id:
@@ -1240,9 +1231,8 @@ class hotel_services(models.Model):
         if self._context is None:
             self._context = {}
         res = super(hotel_services, self).default_get(fields)
-        cat_id = self.env['product.category'].search([('isservicetype',
-                                                       '=',
-                                                       'True')])
+        cat_id = self.env['product.category'].\
+                                       search([('isservicetype', '=', 'True')])
         res.update({'categ_id': cat_id.ids and cat_id.ids[0] or False})
         return res
 
