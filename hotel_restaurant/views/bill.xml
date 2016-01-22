@@ -114,33 +114,33 @@
                                         <td>
                                             <span t-esc="rec.item_rate"/>
                                         </td>
-                                        <td>
+                                        <td align='right'>
                                             <span t-esc="rec.price_subtotal"/>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td/>
-                                        <td/>
                                         <td>
-                                            <strong>Sub Total:</strong>
+                                            <table width="100%" class="table-condensed">
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Sub Total:</strong>
+                                                     </td>
+                                                    <td align='right' t-esc="o.amount_subtotal"/>
+                                                </tr>
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Tax:</strong>
+                                                    </td>
+                                                    <td align='right' t-esc="o.tax"/>
+                                                </tr>
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Total:</strong>
+                                                    </td>
+                                                    <td align='right' t-esc="o.amount_total"/>
+                                                </tr>
+                                            </table>
                                         </td>
-                                        <td t-esc="o.amount_subtotal"/>
-                                    </tr>
-                                    <tr>
-                                        <td/>
-                                        <td/>
-                                        <td>
-                                            <strong>Tax:</strong>
-                                        </td>
-                                        <td t-esc="o.tax"/>
-                                    </tr>
-                                    <tr>
-                                        <td/>
-                                        <td/>
-                                        <td>
-                                            <strong>Total:</strong>
-                                        </td>
-                                        <td t-esc="o.amount_total"/>
                                     </tr>
                                 </tbody>
                             </table>
@@ -246,33 +246,33 @@
                                         <td>
                                             <span t-esc="rec.item_rate"/>
                                         </td>
-                                        <td>
+                                        <td align='right'>
                                             <span t-esc="rec.price_subtotal"/>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td/>
-                                        <td/>
-                                        <td>
-                                            <strong>Sub Total:</strong>
+                                        <td colspan="4">
+                                            <table width="100%" class="table-condensed">
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Sub Total:</strong>
+                                                     </td>
+                                                    <td align='right' t-esc="o.amount_subtotal"/>
+                                                </tr>
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Tax:</strong>
+                                                    </td>
+                                                    <td align='right' t-esc="o.tax"/>
+                                                </tr>
+                                                <tr>
+                                                    <td align='right'>
+                                                        <strong>Total:</strong>
+                                                    </td>
+                                                    <td align='right' t-esc="o.amount_total"/>
+                                                </tr>
+                                            </table>
                                         </td>
-                                        <td t-esc="o.amount_subtotal"/>
-                                    </tr>
-                                    <tr>
-                                        <td/>
-                                        <td/>
-                                        <td>
-                                            <strong>Tax:</strong>
-                                        </td>
-                                        <td t-esc="o.tax"/>
-                                    </tr>
-                                    <tr>
-                                        <td/>
-                                        <td/>
-                                        <td>
-                                            <strong>Total:</strong>
-                                        </td>
-                                        <td t-esc="o.amount_total"/>
                                     </tr>
                                 </tbody>
                             </table>

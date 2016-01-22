@@ -21,12 +21,13 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <span t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <span t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
-                            <table class="table table-condensed container">
+                            <br/>
+                            <table class="table table-condensed">
                                 <thead>
                                     <tr>
                                         <th>

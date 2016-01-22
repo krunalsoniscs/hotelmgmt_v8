@@ -184,7 +184,8 @@ class hotel_housekeeping_activities(models.Model):
     _name = "hotel.housekeeping.activities"
     _description = "Housekeeping Activities "
 
-    a_list = fields.Many2one('hotel.housekeeping', string='Reservation', ondelete='cascade')
+    a_list = fields.Many2one('hotel.housekeeping', string='Reservation',
+                             ondelete='cascade')
     today_date = fields.Date('Today Date')
     activity_name = fields.Many2one('hotel.activity',
                                     string='Housekeeping Activity')

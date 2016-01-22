@@ -19,46 +19,51 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <font t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <font t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <font t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <font t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
+                            <br/>
                             <table class="table table-condensed">
-                                <tr>
-                                    <td>
-                                        <strong>#No</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Guest Name</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Check-In Date</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Room Type</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Room No</strong>
-                                    </td>
-                                </tr>
-                                <tr t-foreach="get_checkout(data['form']['date_start'],data['form']['date_end'])" t-as="info">
-                                    <td>
-                                        <span t-field="info.reservation_no"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="info.partner_id.name"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="info.checkin"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="get_room_type(info.reservation_line)"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="get_room_nos(info.reservation_line)"/>
-                                    </td>
-                                </tr>
+                                <thead>
+	                                <tr>
+	                                    <th>
+	                                        <strong>#No</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Guest Name</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Check-In Date</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Room Type</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Room No</strong>
+	                                    </th>
+	                                </tr>
+                                </thead>
+                                <tbody>
+	                                <tr t-foreach="get_checkout(data['form']['date_start'],data['form']['date_end'])" t-as="info">
+	                                    <td>
+	                                        <span t-field="info.reservation_no"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-field="info.partner_id.name"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-field="info.checkin"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-esc="get_room_type(info.reservation_line)"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-esc="get_room_nos(info.reservation_line)"/>
+	                                    </td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
                     </t>

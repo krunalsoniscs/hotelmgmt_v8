@@ -19,11 +19,12 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <span t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <span t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
+                            <br/>
                             <t t-if="data['form']['check'] == True">
                                 <div t-foreach="get_pos(data['form']['date_start'],data['form']['date_end'])" t-as="info">
                                     <table t-foreach="info[0]" t-as="j" width="100%">
@@ -32,16 +33,16 @@
                                                 <strong>Folio Number :</strong>
                                                 <span t-field="j.folio_id.name"/>
                                             </td>
-                                            <td width="30%">&#160;</td>
-                                            <td width="30%">&#160;</td>
+                                            <td width="20%">&#160;</td>
+                                            <td width="40%">&#160;</td>
                                         </tr>
                                         <tr >
                                             <td width="40%">
                                                 <strong>Customer Name :</strong>
                                                 <span t-field="j.partner_id.name"/>
                                             </td>
-                                            <td width="30%">&#160;</td>
-                                            <td width="30%">
+                                            <td width="20%">&#160;</td>
+                                            <td width="40%">
                                                 <strong>Room No :</strong>
                                                 <span t-field="j.room_no"/>
                                             </td>

@@ -20,28 +20,33 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <span t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <span t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
+                            <br/>
                             <table class="table table-condensed">
-                                <tr>
-                                    <td>
-                                        <strong>Room No</strong>
-                                    </td>
-                                    <td>
-                                        <strong>No of Times used</strong>
-                                    </td>
-                                </tr>
-                                <tr t-foreach="get_room_used_detail(data['form']['date_start'],data['form']['date_end'])" t-as="info">
-                                    <td>
-                                        <span t-esc="info.get('name')"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="info.get('no_of_times_used')"/>
-                                    </td>
-                                </tr>
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <strong>Room No</strong>
+                                        </th>
+                                        <th>
+                                            <strong>No of Times used</strong>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="get_room_used_detail(data['form']['date_start'],data['form']['date_end'])" t-as="info">
+                                        <td>
+                                            <span t-esc="info.get('name')"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="info.get('no_of_times_used')"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
                     </t>

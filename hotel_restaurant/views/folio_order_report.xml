@@ -19,11 +19,12 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <span t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <span t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
+                            <br/>
                             <t t-if="data['form']['check'] == True">
                                 <div t-foreach="get_rest(data['form']['date_start'],data['form']['date_end'])" t-as="info">
                                     <table t-foreach="info[0]" t-as="j" width="100%">
@@ -165,9 +166,9 @@
                             <div class="row mt32 mb32">
                                 <div class="text-center">
                                     <strong>From:</strong>
-                                    <span t-esc="formatLang(data['form']['date_start'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_start'],date_time=True)"/>
                                     <strong>To:</strong>
-                                    <span t-esc="formatLang(data['form']['date_end'],date=True)"/>
+                                    <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
                             <t t-if="data['form']['check'] == True">
@@ -240,6 +241,7 @@
                                     <br/>
                                 </div>
                             </t>
+                            <br/>
                             <t t-if="data['form']['check'] == False">
                                 <table class="table table-condensed">
                                     <tr>

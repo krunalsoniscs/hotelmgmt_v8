@@ -24,52 +24,57 @@
                                     <span t-esc="formatLang(data['form']['date_end'],date_time=True)"/>
                                 </div>
                             </div>
+                            <br/>
                             <table class="table table-condensed">
-                                <tr>
-                                    <td>
-                                        <strong>#No</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Guest Name</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Check-In Date</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Check-Out Date</strong>
-                                    </td>
-                                    <td>
-                                        <strong>Room Details</strong>
-                                    </td>
-                                </tr>
-                                <tr t-foreach="get_data(data['form']['date_start'],data['form']['date_end'])" t-as="info">
-                                    <td>
-                                        <span t-field="info.reservation_no"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="info.partner_id.name"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="info.checkin"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="info.checkout"/>
-                                    </td>
-                                    <td>
-                                        <table   t-foreach="info.reservation_line" t-as="line" >
-                                            <tr>
-                                                <td>
-                                                    <span t-field="line.categ_id.name"/>
-                                                </td>
-                                            </tr>
-                                            <tr t-foreach="line.reserve" t-as="o">
-                                                <td>
-                                                    <span t-field="o.name"/>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
+                                <thead>
+	                                <tr>
+	                                    <th>
+	                                        <strong>#No</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Guest Name</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Check-In Date</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Check-Out Date</strong>
+	                                    </th>
+	                                    <th>
+	                                        <strong>Room Details</strong>
+	                                    </th>
+	                                </tr>
+                                </thead>
+                                <tbody>
+	                                <tr t-foreach="get_data(data['form']['date_start'],data['form']['date_end'])" t-as="info">
+	                                    <td>
+	                                        <span t-field="info.reservation_no"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-field="info.partner_id.name"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-field="info.checkin"/>
+	                                    </td>
+	                                    <td>
+	                                        <span t-field="info.checkout"/>
+	                                    </td>
+	                                    <td>
+	                                        <table   t-foreach="info.reservation_line" t-as="line" >
+	                                            <tr>
+	                                                <td>
+	                                                    <span t-field="line.categ_id.name"/>
+	                                                </td>
+	                                            </tr>
+	                                            <tr t-foreach="line.reserve" t-as="o">
+	                                                <td>
+	                                                    <span t-field="o.name"/>
+	                                                </td>
+	                                            </tr>
+	                                        </table>
+	                                    </td>
+	                                </tr>
+                                </tbody>
                             </table>
                         </div>
                     </t>
